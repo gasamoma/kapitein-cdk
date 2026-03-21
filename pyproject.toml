@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kapitein-cdk"
+version = "0.1.0"
+description = "Reusable AWS CDK L3 constructs for common infrastructure patterns"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+authors = [{name = "gasamoma"}]
+dependencies = [
+    "aws-cdk-lib>=2.100.0",
+    "constructs>=10.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/gasamoma/kapitein-cdk"
+
+[tool.setuptools.packages.find]
+include = ["kapitein_cdk*"]
