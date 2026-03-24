@@ -3,7 +3,6 @@ Reusable CDK L3 Construct for S3 + CloudFront Web Hosting with OAC
 """
 
 from aws_cdk import (
-    Stack,
     RemovalPolicy,
     Duration,
     aws_s3 as s3,
@@ -16,7 +15,6 @@ from aws_cdk import (
 )
 from constructs import Construct
 from typing import Optional, Dict
-import json
 
 
 class WebAppConstruct(Construct):

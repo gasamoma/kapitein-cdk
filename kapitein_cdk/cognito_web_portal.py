@@ -156,7 +156,7 @@ class CognitoWebPortalConstruct(Construct):
             # Create a hash for uniqueness (includes account ID)
             account_id = Stack.of(self).account
             hash_input = f"{stack_name}-{user_pool_name}-{account_id}".encode()
-            hash_suffix = hashlib.md5(hash_input).hexdigest()[:8]
+            hash_suffix = hashlib.sha256(hash_input).hexdigest()[:8]
 
             # Build domain prefix: pool-stack-hash
             domain_prefix = f"{pool_clean}-{stack_clean}-{hash_suffix}"

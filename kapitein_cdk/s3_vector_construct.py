@@ -3,13 +3,12 @@ S3 Vector Bucket CDK Construct
 Creates and manages S3 Vector buckets and indexes for vector search functionality.
 """
 from aws_cdk import (
-    Stack,
     CfnOutput,
     aws_s3vectors as s3vectors,
     aws_iam as iam,
 )
 from constructs import Construct
-from typing import Optional, Dict, Any
+from typing import Optional, List
 
 
 class S3VectorBucket(Construct):
@@ -149,7 +148,7 @@ class S3VectorIndex(Construct):
         )
 
 
-def create_vector_permissions(bucket_name: str, index_names: list = None) -> iam.PolicyDocument:
+def create_vector_permissions(bucket_name: str, index_names: Optional[List[str]] = None) -> iam.PolicyDocument:
     """
     Create IAM policy for S3 Vector operations.
     

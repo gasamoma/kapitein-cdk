@@ -116,21 +116,18 @@ class AuthorizedApiConstruct(Construct):
             path: API path (e.g., "/api/data")
             method: HTTP method (e.g., "GET", "POST")
             lambda_function: Lambda function to integrate
-            required_groups: List of Cognito groups allowed (None = all authenticated)
+            required_groups: List of Cognito groups that should have access.
+                **Note:** API Gateway only validates the JWT token — it does NOT
+                enforce group membership. You must check the Cognito groups claim
+                inside your Lambda handler:
+                    groups = event["requestContext"]["authorizer"]["claims"]
+                              .get("cognito:groups", "").split(",")
+                    if "Admins" not in groups:
+                        return {"statusCode": 403, "body": "Forbidden"}
             require_auth: Whether to require authentication (default: True)
 
         Returns:
             The created API Gateway Method
-
-        Example:
-            # Endpoint accessible by all authenticated users
-            api.add_authorized_endpoint("/api/images", "GET", list_lambda)
-
-            # Endpoint restricted to specific groups
-            api.add_authorized_endpoint(
-                "/api/admin", "POST", admin_lambda,
-                required_groups=["Admins"]
-            )
         """
         # Parse path and create resources
         path_parts = [p for p in path.split("/") if p]

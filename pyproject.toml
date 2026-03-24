@@ -11,12 +11,26 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.9"
 authors = [{name = "gasamoma"}]
 dependencies = [
-    "aws-cdk-lib>=2.100.0",
-    "constructs>=10.0.0",
+    "aws-cdk-lib>=2.100.0,<3.0.0",
+    "constructs>=10.0.0,<11.0.0",
+]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Systems Administration",
+    "Intended Audience :: Developers",
+    "Development Status :: 4 - Beta",
 ]
 
 [project.urls]
 Homepage = "https://github.com/gasamoma/kapitein-cdk"
+Repository = "https://github.com/gasamoma/kapitein-cdk"
+Issues = "https://github.com/gasamoma/kapitein-cdk/issues"
 
 [tool.setuptools.packages.find]
 include = ["kapitein_cdk*"]
