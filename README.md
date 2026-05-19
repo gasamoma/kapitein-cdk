@@ -7,6 +7,8 @@ Every deployment runs automatically in the cloud — no AWS CLI, no terminal com
 
 [![Deploy OIDC Role to AWS](https://img.shields.io/badge/Step%201%3A%20Deploy%20to%20AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://console.aws.amazon.com/cloudformation/home#/stacks/quickcreate?templateURL=https://raw.githubusercontent.com/gasamoma/kapitein-cdk/main/cloudformation/github-oidc-role.yaml&stackName=github-oidc-role)
 
+> **Note for contributors:** The "Deploy to AWS" button points to the `main` branch. It will work after this PR is merged.
+
 ---
 
 ## What you get

@@ -6,27 +6,45 @@ This lets Claude Code open a real browser, take screenshots, and review your liv
 
 ## Setup (3 steps)
 
-### Step 1 — Copy the config file
+### Step 1 — Add Playwright to your Claude Code settings
 
-**Mac:**
-```
-cp config/playwright-mcp.json ~/.claude/mcp.json
+Open (or create) the file `~/.claude/settings.json`:
+- **Mac/Linux:** `~/.claude/settings.json`
+- **Windows:** `%USERPROFILE%\.claude\settings.json`
+
+Add the following `mcpServers` section. **Do not replace your whole file** — add only the `mcpServers` block alongside any content already there.
+
+If `settings.json` doesn't exist yet, create it with this content:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "chromium"]
+    }
+  }
+}
 ```
 
-**Windows** (run in PowerShell):
-```
-Copy-Item config\playwright-mcp.json $env:USERPROFILE\.claude\mcp.json
+If `settings.json` already exists with other content (permissions, theme, etc.), add only the `mcpServers` key:
+
+```json
+{
+  "permissions": { "...your existing permissions..." },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "chromium"]
+    }
+  }
+}
 ```
 
-If the `.claude` folder doesn't exist yet, create it first:
-- Mac: `mkdir -p ~/.claude`
-- Windows: `New-Item -ItemType Directory -Path $env:USERPROFILE\.claude`
+The exact content to copy is also in [`config/playwright-mcp-reference.json`](./config/playwright-mcp-reference.json) in this repo (the `mcpServers` block only — ignore the `_comment` key).
 
-> **Where Claude Code looks for MCP config:**
-> - Mac/Linux: `~/.claude/mcp.json`
-> - Windows: `%USERPROFILE%\.claude\mcp.json`
->
-> You can also place `mcp.json` inside your project folder to keep it project-specific.
+> **Why `settings.json` and not a separate file?**
+> Claude Code reads MCP server configuration from `~/.claude/settings.json` under the `mcpServers` key. There is no separate `mcp.json` — copying a standalone file will have no effect.
 
 ---
 
@@ -58,17 +76,17 @@ After restarting, give Claude Code this prompt:
 
 > "Open https://example.com in a browser and describe what you see."
 
-Claude should navigate to the page, take a screenshot, and describe it. If you see an error about Playwright not being found, go back to Step 2.
+Claude should navigate to the page, take a screenshot, and describe it. If you see an error about Playwright not being found, check the steps below.
 
 ---
 
 ## Common problems
 
+**Playwright commands not available after restart**
+Check that `settings.json` is in the right location and that it contains a valid `mcpServers` key. Common mistake: editing a project-local settings file instead of the global `~/.claude/settings.json`. Also confirm you did a full quit-and-reopen (not just a new session tab).
+
 **"Could not find browser"**
 Run `npx playwright install chromium` again. The browser may not have downloaded fully.
-
-**"MCP server not found" or Playwright commands not available**
-You need a full restart of Claude Code (not just a new session). Also check that `mcp.json` is in the right location — the path must be exact.
 
 **"npx: command not found"**
 Node.js is not installed. Download it from [nodejs.org](https://nodejs.org) (choose the LTS version).

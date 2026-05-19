@@ -55,7 +55,8 @@ class WebsiteStack(Stack):
             runtime=lambda_.Runtime.NODEJS_20_X,
             bundling=nodejs_lambda.BundlingOptions(
                 force_docker_bundling=True,
-                external_modules=["@aws-sdk/*"],
+                # @aws-sdk v3 is pre-installed in the Node.js 20 Lambda runtime
+                external_modules=[],
             ),
             environment={
                 "TABLE_NAME": table.table_name,

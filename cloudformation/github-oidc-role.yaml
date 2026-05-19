@@ -15,9 +15,31 @@ Parameters:
     Description: Your GitHub repository name (use * to allow any repo in your account)
     Default: "*"
 
+  CreateOidcProvider:
+    Type: String
+    Default: "Yes"
+    AllowedValues: ["Yes", "No"]
+    Description: >
+      Choose "No" if you already have a GitHub OIDC provider in this AWS account
+      (e.g. from another GitHub Actions setup). Most users should choose "Yes".
+      If unsure: go to the IAM console, click Identity Providers, and look for
+      token.actions.githubusercontent.com. If you see it, choose "No".
+
+  ExistingOidcProviderArn:
+    Type: String
+    Default: ""
+    Description: >
+      Only fill this in if you chose "No" above. Paste the ARN of your existing
+      GitHub OIDC provider. Find it in IAM console > Identity Providers >
+      click token.actions.githubusercontent.com > copy the ARN at the top.
+
+Conditions:
+  ShouldCreateOidcProvider: !Equals [!Ref CreateOidcProvider, "Yes"]
+
 Resources:
   GitHubOidcProvider:
     Type: AWS::IAM::OIDCProvider
+    Condition: ShouldCreateOidcProvider
     Properties:
       Url: https://token.actions.githubusercontent.com
       ClientIdList:
@@ -35,7 +57,10 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Ref GitHubOidcProvider
+              Federated: !If
+                - ShouldCreateOidcProvider
+                - !Ref GitHubOidcProvider
+                - !Ref ExistingOidcProviderArn
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringEquals:
@@ -106,3 +131,4 @@ Outputs:
       2. In your GitHub repo go to Settings > Secrets and variables > Actions > Variables.
       3. Add three variables: AWS_ACCOUNT_ID=${AWS::AccountId}, AWS_REGION=${AWS::Region}, AWS_ROLE_ARN=<the RoleArn above>.
       4. Push a change to your main branch to trigger the first deployment.
+      Note: if you chose No for CreateOidcProvider, the role was created using your existing OIDC provider.
