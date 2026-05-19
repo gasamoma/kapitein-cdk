@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Website</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f8f9fa;
+      color: #212529;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 3rem;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.75rem; }
+    p  { color: #6c757d; line-height: 1.6; margin-bottom: 1.5rem; }
+    .badge {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    #api-status { margin-top: 2rem; font-size: 0.9rem; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Your site is live!</h1>
+    <p>
+      This is your starter page. Replace this file with your own content.<br />
+      Edit <code>src/frontend/index.html</code> and push to deploy.
+    </p>
+    <span class="badge">Deployed on AWS</span>
+    <div id="api-status">Checking API...</div>
+  </div>
+
+  <script>
+    // Load API URL from config.json injected by CDK at deploy time
+    fetch("/config.json")
+      .then((r) => r.json())
+      .then((config) => {
+        window.API_BASE_URL = config.apiUrl;
+        return fetch(config.apiUrl);
+      })
+      .then((r) => r.json())
+      .then((data) => {
+        document.getElementById("api-status").textContent =
+          "API connected: " + data.message;
+      })
+      .catch(() => {
+        document.getElementById("api-status").textContent =
+          "API not yet reachable (normal during first deploy).";
+      });
+  </script>
+</body>
+</html>
