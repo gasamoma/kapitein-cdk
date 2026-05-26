@@ -1,25 +1,28 @@
 # Architecture Context — kapitein-cdk Stack
 
 Include this section in your project's `CLAUDE.md` so Claude Code knows how to build for this stack.
+Choose the section that matches your site type.
 
 ---
 
-## Stack Architecture
+## Public Site (no user accounts) — always-free tier
 
-You are building on the **kapitein-cdk** serverless stack. Here is how it works:
+**Constructs:** `WebAppConstruct` + `PublicApiConstruct` + DynamoDB
+
+All three AWS services used are in the **always-free tier**: Lambda (1M requests/month forever), DynamoDB (25 GB + 25 WCU/RCU forever), CloudFront (1 TB transfer + 10M requests/month forever).
 
 ### Frontend
 
-Static files in `src/frontend/` are deployed to S3 and served via CloudFront.
+Static files in `src/frontend/` → deployed to S3 → served via CloudFront.
 
-- `src/frontend/index.html` is the entry point
-- CSS and JS go in `src/frontend/css/` and `src/frontend/js/`
-- Images and fonts go in `src/frontend/images/` and `src/frontend/fonts/`
-- Plain HTML/CSS/JS is preferred — no build step required
-- For a Vue.js or React SPA that needs a build step, see the "Framework builds" section below
+- `src/frontend/index.html` — entry point
+- `src/frontend/css/` — stylesheets
+- `src/frontend/js/` — scripts
+- `src/frontend/images/` — images and fonts
 
-The CDK stack injects a `config.json` file into the S3 bucket at deploy time.
-Read it on page load to get the API URL:
+Plain HTML, CSS, and JavaScript preferred. No build step required.
+
+The CDK stack injects `config.json` at deploy time — read it to get the API URL:
 
 ```js
 let API_BASE_URL;
@@ -28,84 +31,43 @@ fetch("/config.json")
   .then(config => { API_BASE_URL = config.apiUrl; });
 ```
 
-### CDN Libraries (encouraged)
+### CDN Libraries (use freely)
 
-Any library that can be loaded from a CDN `<script>` tag works without a build step.
-These are preferred because they deploy instantly without any Docker bundling.
+Libraries via `<script>` CDN tags work with no build step and deploy instantly.
 
-**Animation — GSAP** (GreenSock): smooth, performant animations and scroll effects
-
+**GSAP** — animations, scroll effects, text animations:
 ```html
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    gsap.registerPlugin(ScrollTrigger, SplitText);
-    // animate elements as they scroll into view
-    gsap.from(".hero-title", { opacity: 0, y: 60, duration: 1 });
-    gsap.from(".card", {
-      opacity: 0, y: 40, stagger: 0.15, duration: 0.8,
-      scrollTrigger: { trigger: ".cards", start: "top 80%" }
-    });
-  });
-</script>
+```
+```js
+gsap.registerPlugin(ScrollTrigger, SplitText);
+gsap.from(".hero-title", { opacity: 0, y: 60, duration: 1 });
+gsap.utils.toArray(".reveal").forEach(el =>
+  gsap.from(el, { opacity: 0, y: 40, duration: 0.7,
+    scrollTrigger: { trigger: el, start: "top 85%" } })
+);
 ```
 
-**Lightweight reactivity — Alpine.js**: add interactivity (tabs, modals, dropdowns) without a build step
-
+**Alpine.js** — interactive UI (tabs, modals, accordions):
 ```html
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
-<div x-data="{ open: false }">
-  <button @click="open = !open">Toggle</button>
-  <div x-show="open">Content</div>
-</div>
 ```
 
-**CSS frameworks — Tailwind CDN** (for prototyping) or **PicoCSS** (classless, semantic)
-
+**PicoCSS** — semantic defaults, no utility classes:
 ```html
-<!-- Tailwind play CDN — fast for prototyping, use production build for prod -->
-<script src="https://cdn.tailwindcss.com"></script>
-
-<!-- PicoCSS — beautiful defaults, no classes needed -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 ```
 
-### Framework builds (Vue / React)
+### Backend (Lambda via Function URL)
 
-If a framework that requires a build step is genuinely needed, `WebAppConstruct` supports Docker-based builds via `enable_build=True`. The build runs on GitHub Actions — users still don't need Node.js locally.
-
-To enable it, update `stacks/website_stack.py`:
-
-```python
-web_app = WebAppConstruct(
-    self, "WebApp",
-    source_path=FRONTEND_DIR,
-    config_data={"apiUrl": http_api.url},
-    enable_build=True,          # triggers npm ci && npm run build inside Docker
-    build_image="node:22-alpine",
-    removal_policy=RemovalPolicy.DESTROY,
-)
-```
-
-The frontend `src/frontend/` directory must then contain a standard `package.json` with a `build` script that outputs to `dist/`. The CDK construct copies `dist/*` to S3.
-
-Only enable this when CDN-loaded libraries genuinely cannot meet the requirement. The Docker build step adds 3–5 minutes to every deployment.
-
-### Backend
-
-Lambda functions in `src/handlers/` handle API requests.
-
-**File:** `src/handlers/handler.js`
-**Export:** `exports.handler = async (event, context) => { ... }`
-
-The `event` object is an API Gateway v2 payload (HTTP API format):
+File: `src/handlers/handler.js` — uses API Gateway HTTP API v2 event format.
 
 ```js
 exports.handler = async (event, context) => {
-  const path   = event.rawPath;                          // e.g. "/contact"
-  const method = event.requestContext.http.method;       // "GET" | "POST" | ...
+  const path   = event.rawPath;
+  const method = event.requestContext.http.method;
   const body   = event.body ? JSON.parse(event.body) : {};
   const params = event.queryStringParameters || {};
 
@@ -117,36 +79,102 @@ exports.handler = async (event, context) => {
 };
 ```
 
-### Database
+CORS is configured on the Function URL — do not add CORS headers manually.
 
-DynamoDB table available in Lambda via `process.env.TABLE_NAME`.
+### Database (DynamoDB)
+
+`process.env.TABLE_NAME` — always available in the Lambda environment.
 Primary key: `PK` (string), sort key: `SK` (string).
 
-Use the AWS SDK v3 (pre-installed in Node.js 20 Lambda runtime):
-
 ```js
-import { DynamoDBClient, PutItemCommand, QueryCommand, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 const db = new DynamoDBClient({});
 ```
 
-### Calling the API from the Frontend
+### Framework builds (Vue / React)
 
-```js
-// POST example
-const response = await fetch(API_BASE_URL + "/contact", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name: "Alice", email: "alice@example.com", message: "Hi!" })
-});
-const data = await response.json();
+If a framework requiring a build step is genuinely needed, enable it in `stacks/website_stack.py`:
+
+```python
+web_app = WebAppConstruct(
+    self, "WebApp",
+    source_path=FRONTEND_DIR,
+    config_data={"apiUrl": api.url},
+    enable_build=True,
+    build_image="node:22-alpine",   # runs npm ci && npm run build inside Docker
+    removal_policy=RemovalPolicy.DESTROY,
+)
 ```
 
-### CORS
+Output must go to `dist/`. Build runs on GitHub Actions — users still need no local Node.js.
 
-API Gateway is configured to allow requests from any origin. Do not add CORS headers manually.
+---
+
+## Authenticated Site (user accounts + login) — 12-month free tier
+
+**Constructs:** `WebAppConstruct` + `CognitoWebPortalConstruct` + `AuthorizedApiConstruct` + DynamoDB
+
+Cognito and API Gateway are on the **12-month free tier** (not always-free). After 12 months: ~$0.0055 per monthly active user.
+
+### Frontend
+
+Same file locations as the public site.
+
+`config.json` is injected with both the API URL and Cognito config:
+
+```js
+fetch("/config.json")
+  .then(r => r.json())
+  .then(config => {
+    window.API_BASE_URL   = config.apiUrl;
+    window.COGNITO_CLIENT = config.cognitoClientId;
+    window.COGNITO_DOMAIN = config.cognitoDomain;
+  });
+```
+
+**Login redirect** — send the user to the Cognito hosted UI:
+```js
+const loginUrl = `https://${window.COGNITO_DOMAIN}/login`
+  + `?client_id=${window.COGNITO_CLIENT}`
+  + `&response_type=token`
+  + `&redirect_uri=${encodeURIComponent(window.location.origin)}`;
+window.location.href = loginUrl;
+```
+
+**After login** — Cognito redirects back with `id_token` in the URL fragment:
+```js
+const token = new URLSearchParams(window.location.hash.slice(1)).get("id_token");
+localStorage.setItem("id_token", token);
+```
+
+**Authenticated API calls** — pass the token as a Bearer header:
+```js
+const res = await fetch(window.API_BASE_URL + "/my-data", {
+  headers: { Authorization: `Bearer ${localStorage.getItem("id_token")}` }
+});
+```
+
+### Backend (Lambda behind Cognito auth)
+
+API Gateway validates the Cognito token before the Lambda runs — unauthenticated requests are rejected automatically. Cognito user details arrive in the event:
+
+```js
+exports.handler = async (event) => {
+  const claims = event.requestContext?.authorizer?.jwt?.claims || {};
+  const userId  = claims.sub;   // unique Cognito user ID — use as DynamoDB PK
+  const email   = claims.email;
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, email })
+  };
+};
+```
+
+CORS is configured by `AuthorizedApiConstruct` — do not add CORS headers manually.
 
 ### Deployment
 
-Users push to the `main` branch on GitHub. GitHub Actions runs `cdk deploy` automatically.
-Do not instruct the user to run any AWS CLI or CDK commands locally.
-The deployment takes 5–10 minutes on first run, 2–5 minutes after that.
+Push to `main`. GitHub Actions deploys automatically for both site types.
+Do not instruct users to run any AWS or CDK commands locally.

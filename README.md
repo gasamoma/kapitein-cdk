@@ -17,8 +17,9 @@ Available constructs:
 | Construct | Description |
 |-----------|-------------|
 | `WebAppConstruct` | S3 + CloudFront static web app hosting with OAC, SPA routing, config injection, optional build step |
+| `PublicApiConstruct` | Lambda Function URL (no auth) — always-free tier; for public websites without user login |
 | `CognitoWebPortalConstruct` | Cognito User Pool with groups, hosted UI domain, and web client |
-| `AuthorizedApiConstruct` | API Gateway REST API with Cognito authorization and CORS |
+| `AuthorizedApiConstruct` | API Gateway REST API with Cognito authorization and CORS — for authenticated apps |
 | `S3VectorBucket` | S3 Vector bucket with index management |
 | `S3VectorIndex` | Standalone vector index for existing S3 Vector buckets |
 

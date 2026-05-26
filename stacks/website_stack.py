@@ -5,38 +5,32 @@ from aws_cdk import (
     CfnOutput,
     RemovalPolicy,
     aws_dynamodb as dynamodb,
-    aws_lambda as lambda_,
-    aws_lambda_nodejs as nodejs_lambda,
-    aws_apigatewayv2 as apigwv2,
 )
-from aws_cdk.aws_apigatewayv2_integrations import HttpLambdaIntegration
 from constructs import Construct
-from kapitein_cdk import WebAppConstruct
+from kapitein_cdk import WebAppConstruct, PublicApiConstruct
 
-# Path to the handlers directory relative to this file
 HANDLERS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "handlers")
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "frontend")
 
 
 class WebsiteStack(Stack):
     """
-    Full serverless website stack: CloudFront + S3 + HTTP API + Lambda + DynamoDB.
+    Public website stack — always-free tier.
 
-    Deploys:
-      - S3 bucket (private, accessed via CloudFront)
-      - CloudFront distribution (HTTPS, gzip, SPA routing)
-      - HTTP API Gateway (v2)
-      - Lambda function (Node.js 20, Docker-bundled)
-      - DynamoDB table (on-demand, PK + SK)
+    Uses Lambda Function URL instead of API Gateway so the backend stays
+    in the always-free tier (1M requests/month forever).
 
-    Frontend files go in src/frontend/.
-    Lambda handler goes in src/handlers/handler.js.
+    For a site that needs user accounts and login, use a stack based on
+    CognitoWebPortalConstruct + AuthorizedApiConstruct instead.
+
+    Frontend files: src/frontend/
+    Lambda handler:  src/handlers/handler.js
     """
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # DynamoDB table — flexible schema with PK + SK
+        # DynamoDB table — always free (25 GB, 25 WCU/RCU forever)
         table = dynamodb.Table(
             self,
             "Table",
@@ -46,58 +40,29 @@ class WebsiteStack(Stack):
             removal_policy=RemovalPolicy.RETAIN,
         )
 
-        # Lambda function — always bundled in Docker so no local Node.js is needed
-        api_handler = nodejs_lambda.NodejsFunction(
+        # Lambda + Function URL — always free, no API Gateway needed
+        api = PublicApiConstruct(
             self,
-            "ApiHandler",
+            "Api",
             entry=os.path.join(HANDLERS_DIR, "handler.js"),
-            handler="handler",
-            runtime=lambda_.Runtime.NODEJS_20_X,
-            bundling=nodejs_lambda.BundlingOptions(
-                force_docker_bundling=True,
-                # @aws-sdk v3 is pre-installed in the Node.js 20 Lambda runtime
-                external_modules=[],
-            ),
             environment={
                 "TABLE_NAME": table.table_name,
                 "ENVIRONMENT": "production",
             },
-            timeout=cdk.Duration.seconds(30),
         )
 
-        table.grant_read_write_data(api_handler)
+        table.grant_read_write_data(api.function)
 
-        # HTTP API Gateway — cheaper and simpler than REST API
-        http_api = apigwv2.HttpApi(
-            self,
-            "Api",
-            cors_preflight=apigwv2.CorsPreflightOptions(
-                allow_origins=["*"],
-                allow_methods=[apigwv2.CorsHttpMethod.ANY],
-                allow_headers=["Content-Type", "Authorization"],
-                max_age=cdk.Duration.days(1),
-            ),
-        )
-
-        http_api.add_routes(
-            path="/{proxy+}",
-            methods=[apigwv2.HttpMethod.ANY],
-            integration=HttpLambdaIntegration("HandlerIntegration", api_handler),
-        )
-
-        # CloudFront + S3 frontend — inject API URL as config.json
+        # CloudFront + S3 — injects the Lambda URL into config.json at deploy time
         web_app = WebAppConstruct(
             self,
             "WebApp",
             source_path=FRONTEND_DIR,
-            config_data={
-                "apiUrl": http_api.url,
-            },
+            config_data={"apiUrl": api.url},
             enable_spa_routing=True,
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # Stack outputs — visible in GitHub Actions summary and CloudFormation console
         CfnOutput(self, "WebsiteUrl", value=web_app.url, description="CloudFront URL — open this in your browser")
-        CfnOutput(self, "ApiUrl", value=http_api.url, description="API Gateway URL")
+        CfnOutput(self, "ApiUrl", value=api.url, description="Lambda Function URL")
         CfnOutput(self, "TableName", value=table.table_name, description="DynamoDB table name")

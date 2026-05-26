@@ -2,12 +2,14 @@
 
 from .cognito_web_portal import CognitoWebPortalConstruct
 from .authorized_api import AuthorizedApiConstruct
+from .public_api import PublicApiConstruct
 from .web_app import WebAppConstruct
 from .s3_vector_construct import S3VectorBucket, S3VectorIndex, create_vector_permissions
 
 __all__ = [
     "CognitoWebPortalConstruct",
     "AuthorizedApiConstruct",
+    "PublicApiConstruct",
     "WebAppConstruct",
     "S3VectorBucket",
     "S3VectorIndex",
