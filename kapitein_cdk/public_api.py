@@ -78,8 +78,7 @@ class PublicApiConstruct(Construct):
             runtime=lambda_.Runtime.NODEJS_20_X,
             bundling=nodejs_lambda.BundlingOptions(
                 force_docker_bundling=True,
-                # @aws-sdk v3 is pre-installed in the Node.js 20 Lambda runtime
-                external_modules=[],
+                external_modules=["@aws-sdk/*"],
             ),
             environment=environment or {},
             timeout=timeout,

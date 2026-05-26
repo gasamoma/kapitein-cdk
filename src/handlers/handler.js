@@ -1,7 +1,7 @@
 /**
  * Default Lambda handler — replace this with your own logic.
  *
- * Event format: API Gateway HTTP API v2 (payload format 2.0)
+ * Event format: Lambda Function URL (payload format 2.0 — same as HTTP API Gateway)
  * - event.rawPath        → e.g. "/hello"
  * - event.requestContext.http.method → "GET", "POST", etc.
  * - event.body           → request body string (JSON.parse it)
