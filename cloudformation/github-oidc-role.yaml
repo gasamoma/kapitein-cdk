@@ -110,6 +110,11 @@ Resources:
                   - iam:DeletePolicyVersion
                   - iam:SetDefaultPolicyVersion
                 Resource: "*"
+              - Sid: CognitoForCdk
+                Effect: Allow
+                Action:
+                  - cognito-idp:*
+                Resource: "*"
               - Sid: SsmForCdkBootstrap
                 Effect: Allow
                 Action:

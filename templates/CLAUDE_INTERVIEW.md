@@ -5,6 +5,10 @@
 > Then open Claude Code in that folder and type: **Start a new project**
 >
 > Claude will interview you before writing any code.
+>
+> If you already know what kind of site you want, consider using one of the
+> specialized templates in `templates/agents/` instead — they skip the interview
+> and start building immediately.
 
 ---
 
@@ -28,7 +32,7 @@ Wait for the answer, then ask:
 Wait for the answer, then ask:
 
 **Question 4:**
-"How should the site feel? You can use words like: clean and minimal, warm and friendly, bold and confident, elegant and premium — or describe it in your own words."
+"How should the site feel? You can use words like: clean and minimal, warm and friendly, bold and confident, elegant and premium — or describe it in your own words. Also tell me: should it have animations and motion (like elements fading in as you scroll), or stay calm and still?"
 
 Wait for the answer, then ask:
 
@@ -46,7 +50,7 @@ After the user confirms, say:
 When the user says "write the spec", create a `CLAUDE.md` file with:
 1. A plain-English description of the project
 2. The target audience and goal
-3. The visual style
+3. The visual style (including whether animations are wanted)
 4. The page list
 5. The architecture section below (copy it in full)
 
@@ -63,18 +67,41 @@ Static files go in `src/frontend/`.
 - CSS files go in `src/frontend/css/`
 - JavaScript files go in `src/frontend/js/`
 - Images go in `src/frontend/images/`
-- Do not use React, Vue, or any framework that requires a build step unless you ask first
-- To get the API URL in JavaScript: fetch `/config.json` first, then read `config.apiUrl`
+
+Plain HTML, CSS, and JavaScript is the default. Do not add a build step unless the user explicitly asks for a framework that requires one.
+
+To get the API URL in JavaScript:
 
 ```js
-// How to call the API from your frontend
 fetch("/config.json")
   .then(r => r.json())
   .then(config => {
     window.API_BASE_URL = config.apiUrl;
-    // now call: fetch(window.API_BASE_URL + "/your-path", { ... })
   });
 ```
+
+### CDN Libraries (use freely)
+
+Libraries loaded via `<script>` CDN tags work with no build step and deploy instantly.
+
+**GSAP** — for animations, scroll effects, text animations:
+```html
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
+```
+
+**Alpine.js** — for interactive UI (tabs, modals, dropdowns):
+```html
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
+```
+
+**PicoCSS** — beautiful semantic defaults, no utility classes needed:
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+```
+
+Use GSAP animations when the user asked for motion, scroll effects, or a "modern" feel. Use Alpine.js for interactive components. Use PicoCSS or custom CSS for styling — avoid Tailwind CDN on production sites.
 
 ### Backend (Lambda)
 
@@ -102,23 +129,6 @@ Table name: `process.env.TABLE_NAME`
 ```js
 import { DynamoDBClient, PutItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 const db = new DynamoDBClient({});
-
-// Write an item
-await db.send(new PutItemCommand({
-  TableName: process.env.TABLE_NAME,
-  Item: {
-    PK: { S: "user#123" },
-    SK: { S: "profile" },
-    name: { S: "Alice" }
-  }
-}));
-
-// Read items by PK
-const result = await db.send(new QueryCommand({
-  TableName: process.env.TABLE_NAME,
-  KeyConditionExpression: "PK = :pk",
-  ExpressionAttributeValues: { ":pk": { S: "user#123" } }
-}));
 ```
 
 ### Deploying
