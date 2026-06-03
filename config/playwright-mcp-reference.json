@@ -1,0 +1,9 @@
+{
+  "_comment": "Reference only — do not copy this file directly. Follow the instructions in PLAYWRIGHT_SETUP.md to add the mcpServers block to your existing ~/.claude/settings.json.",
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "chromium"]
+    }
+  }
+}

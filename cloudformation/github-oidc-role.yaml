@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  GitHub Actions OIDC IAM Role for kapitein-cdk deployments.
+  Creates an IAM role that GitHub Actions can assume without stored credentials.
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Description: Your GitHub username or organization name (e.g. myusername)
+    AllowedPattern: "[a-zA-Z0-9-]+"
+    ConstraintDescription: Only letters, numbers, and hyphens allowed
+
+  GitHubRepo:
+    Type: String
+    Description: Your GitHub repository name (use * to allow any repo in your account)
+    Default: "*"
+
+  CreateOidcProvider:
+    Type: String
+    Default: "Yes"
+    AllowedValues: ["Yes", "No"]
+    Description: >
+      Choose "No" if you already have a GitHub OIDC provider in this AWS account
+      (e.g. from another GitHub Actions setup). Most users should choose "Yes".
+      If unsure: go to the IAM console, click Identity Providers, and look for
+      token.actions.githubusercontent.com. If you see it, choose "No".
+
+  ExistingOidcProviderArn:
+    Type: String
+    Default: ""
+    Description: >
+      Only fill this in if you chose "No" above. Paste the ARN of your existing
+      GitHub OIDC provider. Find it in IAM console > Identity Providers >
+      click token.actions.githubusercontent.com > copy the ARN at the top.
+
+Conditions:
+  ShouldCreateOidcProvider: !Equals [!Ref CreateOidcProvider, "Yes"]
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: ShouldCreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "github-actions-${GitHubOrg}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - ShouldCreateOidcProvider
+                - !Ref GitHubOidcProvider
+                - !Ref ExistingOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/CloudFrontFullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+      Policies:
+        - PolicyName: CdkDeployPermissions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: CloudFormationFullAccess
+                Effect: Allow
+                Action:
+                  - cloudformation:*
+                Resource: "*"
+              - Sid: IamForCdk
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:PassRole
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:CreateServiceLinkedRole
+                  - iam:GetPolicy
+                  - iam:CreatePolicy
+                  - iam:DeletePolicy
+                  - iam:ListPolicyVersions
+                  - iam:CreatePolicyVersion
+                  - iam:DeletePolicyVersion
+                  - iam:SetDefaultPolicyVersion
+                Resource: "*"
+              - Sid: CognitoForCdk
+                Effect: Allow
+                Action:
+                  - cognito-idp:*
+                Resource: "*"
+              - Sid: SsmForCdkBootstrap
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                Resource: !Sub "arn:aws:ssm:*:${AWS::AccountId}:parameter/cdk-bootstrap/*"
+
+Outputs:
+  RoleArn:
+    Description: >
+      Copy this value and add it as a GitHub repository variable named AWS_ROLE_ARN
+    Value: !GetAtt GitHubActionsRole.Arn
+
+  SetupInstructions:
+    Description: Next steps after this stack is created
+    Value: !Sub >
+      1. Copy the RoleArn above.
+      2. In your GitHub repo go to Settings > Secrets and variables > Actions > Variables.
+      3. Add three variables: AWS_ACCOUNT_ID=${AWS::AccountId}, AWS_REGION=${AWS::Region}, AWS_ROLE_ARN=<the RoleArn above>.
+      4. Push a change to your main branch to trigger the first deployment.
+      Note: if you chose No for CreateOidcProvider, the role was created using your existing OIDC provider.
