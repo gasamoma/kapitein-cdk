@@ -126,14 +126,14 @@ Resources:
 Outputs:
   RoleArn:
     Description: >
-      Copy this value and add it as a GitHub repository variable named AWS_ROLE_ARN
+      Copy this value and add it as a GitHub repository secret named AWS_ROLE_ARN
     Value: !GetAtt GitHubActionsRole.Arn
 
   SetupInstructions:
     Description: Next steps after this stack is created
     Value: !Sub >
       1. Copy the RoleArn above.
-      2. In your GitHub repo go to Settings > Secrets and variables > Actions > Variables.
-      3. Add three variables: AWS_ACCOUNT_ID=${AWS::AccountId}, AWS_REGION=${AWS::Region}, AWS_ROLE_ARN=<the RoleArn above>.
+      2. In your GitHub repo go to Settings > Secrets and variables > Actions > Secrets tab.
+      3. Add three secrets: AWS_ACCOUNT_ID=${AWS::AccountId}, AWS_REGION=${AWS::Region}, AWS_ROLE_ARN=<the RoleArn above>.
       4. Push a change to your main branch to trigger the first deployment.
       Note: if you chose No for CreateOidcProvider, the role was created using your existing OIDC provider.
