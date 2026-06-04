@@ -84,12 +84,12 @@ Click **Create stack**. When status shows `CREATE_COMPLETE`, copy the **RoleArn*
 
 Click **Fork** at the top of this page.
 
-**Step 3 — Add three repository variables**
+**Step 3 — Add three repository secrets**
 
-In your fork: **Settings → Secrets and variables → Actions → Variables tab**
+In your fork: **Settings → Secrets and variables → Actions → Secrets tab**
 
-| Variable | Value |
-|----------|-------|
+| Secret | Value |
+|--------|-------|
 | `AWS_ACCOUNT_ID` | Your 12-digit AWS account number |
 | `AWS_REGION` | `us-east-1` (or your preferred region) |
 | `AWS_ROLE_ARN` | The RoleArn from Step 1 |
