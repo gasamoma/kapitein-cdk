@@ -7,6 +7,8 @@ form submissions, and any backend logic that does not require user login.
 For authenticated APIs (Cognito user accounts), use AuthorizedApiConstruct instead.
 """
 
+import os
+
 from aws_cdk import (
     Duration,
     aws_lambda as lambda_,
@@ -76,6 +78,7 @@ class PublicApiConstruct(Construct):
             entry=entry,
             handler=handler,
             runtime=lambda_.Runtime.NODEJS_20_X,
+            deps_lock_file_path=os.path.join(os.path.dirname(os.path.abspath(entry)), "package-lock.json"),
             bundling=nodejs_lambda.BundlingOptions(
                 force_docker_bundling=True,
                 external_modules=["@aws-sdk/*"],
