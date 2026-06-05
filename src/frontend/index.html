@@ -1,72 +1,949 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Website</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Captain AI — Build Real Websites. Deploy Free on AWS.</title>
+  <meta name="description" content="Learn to build and deploy production websites using Claude Code and AWS — no dev skills, no monthly fees. The site you're on was built this way.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/SplitText.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050508;
+      --surface: #0d0d14;
+      --surface-2: #14141f;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --text: #eeeef2;
+      --muted: #6b6b80;
+      --accent: #6366f1;
+      --accent-dim: rgba(99,102,241,0.12);
+      --accent-glow: rgba(99,102,241,0.25);
+      --emerald: #10b981;
+      --emerald-dim: rgba(16,185,129,0.12);
+      --r: 12px;
+      --r-lg: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f8f9fa;
-      color: #212529;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 100;
+      padding: 18px 48px;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5,5,8,0.75);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.3s;
+    }
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo em { color: var(--accent); font-style: normal; }
+    .nav-btn {
+      padding: 10px 22px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 3rem;
-      max-width: 560px;
-      width: 100%;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
       text-align: center;
+      padding: 130px 40px 100px;
+      position: relative;
+      overflow: hidden;
     }
-    h1 { font-size: 2rem; margin-bottom: 0.75rem; }
-    p  { color: #6c757d; line-height: 1.6; margin-bottom: 1.5rem; }
-    .badge {
-      display: inline-block;
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 0.35rem 0.9rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.06) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 80%);
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .orb-1 { width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.18) 0%,transparent 70%);top:10%;left:50%;transform:translateX(-50%); }
+    .orb-2 { width:300px;height:300px;background:radial-gradient(circle,rgba(16,185,129,0.1) 0%,transparent 70%);bottom:20%;left:20%; }
+    .orb-3 { width:250px;height:250px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0%,transparent 70%);top:20%;right:15%; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      color: #a5b4fc;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      margin-bottom: 36px;
+    }
+    .badge-dot {
+      width:6px;height:6px;
+      background:var(--emerald);
+      border-radius:50%;
+      animation:blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
+
+    .hero-h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3.2rem,9vw,8rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      max-width: 960px;
+      margin-bottom: 32px;
+    }
+    .grad {
+      background: linear-gradient(135deg, #c7d2fe 0%, var(--accent) 40%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem,2vw,1.2rem);
+      color: var(--muted);
+      max-width: 580px;
+      margin-bottom: 52px;
+      line-height: 1.8;
+      opacity: 0;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 80px;
+      opacity: 0;
+    }
+    .btn-primary {
+      padding: 16px 36px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-family: 'Space Grotesk', sans-serif;
       font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 0 40px var(--accent-glow);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    #api-status { margin-top: 2rem; font-size: 0.9rem; color: #6c757d; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 60px var(--accent-glow); }
+    .btn-ghost {
+      padding: 16px 36px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-hover);
+      border-radius: var(--r);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); background: var(--accent-dim); transform: translateY(-3px); }
+
+    .hero-proof {
+      display: flex;
+      gap: 48px;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+    }
+    .proof-stat { text-align: center; }
+    .proof-stat .num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      display: block;
+    }
+    .proof-stat .lbl {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0;
+    }
+    .scroll-arrow {
+      width:18px;height:18px;
+      border-right:2px solid var(--muted);
+      border-bottom:2px solid var(--muted);
+      transform:rotate(45deg);
+      animation:drop 1.6s ease-in-out infinite;
+    }
+    @keyframes drop { 0%,100%{transform:rotate(45deg) translate(0,0);opacity:1} 50%{transform:rotate(45deg) translate(4px,4px);opacity:.4} }
+
+    /* SHARED */
+    .sec {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 120px 48px;
+    }
+    .full-sec {
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .full-sec .sec { padding: 120px 48px; }
+
+    .lbl {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    h2.ttl {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem,4vw,3.6rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+    .sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 540px;
+      line-height: 1.8;
+    }
+    .rule { width:48px;height:2px;background:var(--accent);margin:28px 0; }
+
+    /* LEARN */
+    .learn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+      gap: 24px;
+      margin-top: 64px;
+    }
+    .lcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 40px 36px;
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .lcard::before {
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(circle at 0% 0%,rgba(99,102,241,0.07) 0%,transparent 60%);
+      opacity:0;transition:opacity 0.3s;
+    }
+    .lcard:hover { border-color:rgba(99,102,241,0.3);transform:translateY(-6px); }
+    .lcard:hover::before { opacity:1; }
+    .lcard-ico {
+      width:52px;height:52px;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.6rem;margin-bottom:28px;
+    }
+    .ic-p{background:rgba(99,102,241,0.12)}
+    .ic-e{background:rgba(16,185,129,0.12)}
+    .ic-a{background:rgba(245,158,11,0.12)}
+    .lcard h3 { font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:600;margin-bottom:12px; }
+    .lcard p { color:var(--muted);font-size:0.95rem;line-height:1.75; }
+
+    /* HOW IT WORKS */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+      gap: 48px;
+      margin-top: 64px;
+    }
+    .step-num {
+      font-family:'Space Grotesk',sans-serif;
+      font-size:5.5rem;font-weight:700;
+      color:rgba(99,102,241,0.12);
+      line-height:1;margin-bottom:12px;
+      transition:color 0.3s;
+    }
+    .step:hover .step-num { color:rgba(99,102,241,0.28); }
+    .step h3 { font-family:'Space Grotesk',sans-serif;font-size:1.35rem;font-weight:600;margin-bottom:12px; }
+    .step p { color:var(--muted);line-height:1.75;font-size:0.95rem; }
+    .step-pill {
+      display:inline-block;margin-top:18px;
+      padding:4px 14px;
+      background:var(--emerald-dim);
+      border:1px solid rgba(16,185,129,0.25);
+      border-radius:100px;
+      font-size:0.73rem;color:var(--emerald);font-weight:600;
+    }
+
+    /* STACK */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+      gap: 20px;
+      margin-top: 64px;
+    }
+    .scard {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      padding:28px 24px;
+      display:flex;flex-direction:column;gap:10px;
+      transition:border-color 0.3s,transform 0.3s;
+    }
+    .scard:hover { border-color:var(--border-hover);transform:translateY(-4px); }
+    .scard-head { display:flex;align-items:center;gap:12px; }
+    .scard-ico {
+      width:38px;height:38px;border-radius:10px;
+      background:var(--surface-2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.1rem;flex-shrink:0;
+    }
+    .scard h4 { font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:600; }
+    .scard p { font-size:0.82rem;color:var(--muted);line-height:1.6; }
+    .free-tag {
+      display:inline-flex;align-items:center;gap:4px;
+      margin-top:auto;padding:3px 10px;
+      background:var(--emerald-dim);
+      border:1px solid rgba(16,185,129,0.2);
+      border-radius:100px;
+      font-size:0.68rem;color:var(--emerald);font-weight:700;letter-spacing:0.05em;
+    }
+
+    /* SHOWCASE */
+    .show-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:24px;margin-top:64px;
+    }
+    .show-card {
+      border-radius:var(--r-lg);overflow:hidden;
+      border:1px solid var(--border);
+      background:var(--surface);
+      transition:border-color 0.3s,transform 0.3s;
+    }
+    .show-card:hover { border-color:rgba(99,102,241,0.3);transform:translateY(-8px); }
+    .show-preview {
+      height:180px;
+      display:flex;align-items:center;justify-content:center;
+      position:relative;overflow:hidden;
+    }
+    .show-preview::after {
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(to bottom,transparent 40%,rgba(13,13,20,0.9));
+    }
+    .mock { width:80%;height:80%;position:relative;border-radius:8px;overflow:hidden; }
+
+    /* animated landing mockup */
+    .p-anim { background:linear-gradient(160deg,#0f0f1e 0%,#1a1040 50%,#0d0d14 100%); }
+    .p-anim .mb { height:28px;background:rgba(99,102,241,0.2);margin:12px 10px 8px;border-radius:4px; }
+    .p-anim .mh { height:60px;background:linear-gradient(90deg,rgba(99,102,241,0.3),rgba(139,92,246,0.2));margin:0 10px;border-radius:4px; }
+    .p-anim .ml-wrap { padding:10px;display:flex;flex-direction:column;gap:6px; }
+    .p-anim .ml { height:6px;border-radius:3px;background:rgba(255,255,255,0.08); }
+    .p-anim .ml.s { width:60%; }
+
+    /* portfolio mockup */
+    .p-port { background:linear-gradient(160deg,#0f0c1a 0%,#1a0d2e 50%,#0d0d14 100%); }
+    .p-port .mg { display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px;height:100%; }
+    .p-port .mt { border-radius:4px; }
+    .p-port .mt:nth-child(1){background:rgba(139,92,246,0.25)}
+    .p-port .mt:nth-child(2){background:rgba(99,102,241,0.15);margin-top:16px}
+    .p-port .mt:nth-child(3){background:rgba(167,139,250,0.2)}
+    .p-port .mt:nth-child(4){background:rgba(99,102,241,0.1);margin-top:-16px}
+
+    /* business site mockup */
+    .p-biz { background:linear-gradient(160deg,#080d1a 0%,#0d1e38 50%,#060c16 100%); }
+    .p-biz .mn { height:22px;background:rgba(59,130,246,0.2);margin:10px;border-radius:3px; }
+    .p-biz .mh2 { margin:0 10px;height:50px;background:linear-gradient(90deg,rgba(59,130,246,0.25),transparent);border-radius:4px; }
+    .p-biz .mc-wrap { display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:8px 10px; }
+    .p-biz .mc { height:28px;border-radius:3px;background:rgba(59,130,246,0.1); }
+
+    /* saas mockup */
+    .p-saas { background:linear-gradient(160deg,#060812 0%,#0c0f22 50%,#060810 100%); }
+    .p-saas .mp { height:14px;width:50%;margin:14px auto 6px;border-radius:100px;background:rgba(99,102,241,0.2); }
+    .p-saas .mbig { height:32px;margin:0 10px;border-radius:4px;background:linear-gradient(90deg,rgba(99,102,241,0.3),rgba(139,92,246,0.15)); }
+    .p-saas .mpc-wrap { display:flex;gap:5px;padding:8px 10px; }
+    .p-saas .mpc { flex:1;height:36px;border-radius:4px;border:1px solid rgba(99,102,241,0.2); }
+
+    .show-info { padding:20px 24px; }
+    .show-info h3 { font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;margin-bottom:4px; }
+    .show-info p { font-size:0.82rem;color:var(--muted); }
+
+    /* CHAT */
+    .chat-wrap {
+      max-width:780px;margin:64px auto 0;
+      display:flex;flex-direction:column;gap:18px;
+    }
+    .cmsg { display:flex;gap:14px;align-items:flex-start; }
+    .cmsg.user { flex-direction:row-reverse; }
+    .cav {
+      width:34px;height:34px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.85rem;font-weight:700;flex-shrink:0;
+    }
+    .cmsg.claude .cav { background:var(--accent);color:#fff; }
+    .cmsg.user .cav { background:var(--surface-2);border:1px solid var(--border); }
+    .cbubble {
+      max-width:68%;padding:14px 18px;
+      font-size:0.92rem;line-height:1.65;border-radius:16px;
+    }
+    .cmsg.claude .cbubble {
+      background:var(--surface-2);border:1px solid var(--border);
+      border-radius:4px 16px 16px 16px;color:var(--muted);
+    }
+    .cmsg.user .cbubble {
+      background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2);
+      border-radius:16px 4px 16px 16px;color:var(--text);
+    }
+    .chat-footer { text-align:center;margin-top:56px;opacity:0; }
+    .chat-footer p { color:var(--muted);margin-bottom:24px;font-size:0.95rem; }
+
+    /* CTA */
+    .cta-box {
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:28px;padding:96px 48px;text-align:center;
+      position:relative;overflow:hidden;
+    }
+    .cta-box::before {
+      content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+      width:500px;height:500px;
+      background:radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 70%);
+      pointer-events:none;
+    }
+    .cta-box h2 {
+      font-family:'Space Grotesk',sans-serif;
+      font-size:clamp(2rem,4vw,3.2rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:16px;
+    }
+    .cta-box p { color:var(--muted);font-size:1.1rem;max-width:520px;margin:0 auto 44px;line-height:1.75; }
+
+    /* FORM */
+    .form-box {
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r-lg);padding:52px 48px;margin-top:64px;
+    }
+    .form-row { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+    .fg { display:flex;flex-direction:column;gap:8px;margin-bottom:16px; }
+    .fg label { font-size:0.82rem;font-weight:500;color:var(--muted); }
+    .fg input,.fg textarea {
+      background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--r);padding:14px 16px;
+      color:var(--text);font-family:'Inter',sans-serif;font-size:0.95rem;
+      outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;
+    }
+    .fg input:focus,.fg textarea:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px var(--accent-glow);
+    }
+    .fg textarea { resize:vertical;min-height:110px; }
+    .form-submit {
+      width:100%;padding:16px;
+      background:var(--accent);color:#fff;border:none;border-radius:var(--r);
+      font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;
+      cursor:pointer;margin-top:8px;
+      box-shadow:0 0 30px var(--accent-glow);
+      transition:opacity 0.2s,transform 0.2s,box-shadow 0.2s;
+    }
+    .form-submit:hover { opacity:.92;transform:translateY(-2px);box-shadow:0 6px 40px var(--accent-glow); }
+    .form-submit:disabled { opacity:.5;cursor:not-allowed;transform:none; }
+    .form-success { display:none;text-align:center;padding:40px 20px; }
+    .form-success .ck { font-size:3.5rem;margin-bottom:20px;display:block; }
+    .form-success h3 { font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:10px; }
+    .form-success p { color:var(--muted); }
+
+    /* FOOTER */
+    footer {
+      border-top:1px solid var(--border);
+      padding:40px 48px;text-align:center;
+      font-size:0.82rem;color:var(--muted);
+    }
+    footer a { color:var(--accent);text-decoration:none; }
+    footer a:hover { text-decoration:underline; }
+
+    @media(max-width:640px){
+      nav{padding:16px 24px}
+      .sec{padding:80px 24px}
+      .full-sec .sec{padding:80px 24px}
+      .form-box{padding:32px 24px}
+      .form-row{grid-template-columns:1fr}
+      .cta-box{padding:60px 24px}
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Your site is live!</h1>
-    <p>
-      This is your starter page. Replace this file with your own content.<br />
-      Edit <code>src/frontend/index.html</code> and push to deploy.
-    </p>
-    <span class="badge">Deployed on AWS</span>
-    <div id="api-status">Checking API...</div>
+
+<nav id="nav">
+  <a class="logo" href="#"><em>Captain</em> AI</a>
+  <a href="#contact" class="nav-btn">Book a Session</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-badge">
+    <div class="badge-dot"></div>
+    Built with Claude Code &middot; Deployed on AWS &middot; Always Free
   </div>
 
-  <script>
-    // Load API URL from config.json injected by CDK at deploy time
-    fetch("/config.json")
-      .then((r) => r.json())
-      .then((config) => {
-        window.API_BASE_URL = config.apiUrl;
-        return fetch(config.apiUrl);
-      })
-      .then((r) => r.json())
-      .then((data) => {
-        document.getElementById("api-status").textContent =
-          "API connected: " + data.message;
-      })
-      .catch(() => {
-        document.getElementById("api-status").textContent =
-          "API not yet reachable (normal during first deploy).";
-      });
-  </script>
+  <h1 class="hero-h1">
+    Build Real<br>Websites.<br><span class="grad">Deploy Free.</span>
+  </h1>
+
+  <p class="hero-sub">
+    No code. No dev skills. No monthly hosting bill.<br>
+    Just Claude Code, a GitHub account, and 30 minutes.<br>
+    The site you're reading right now is proof.
+  </p>
+
+  <div class="hero-actions">
+    <a href="https://youtube.com/@captainai" target="_blank" class="btn-primary">
+      &#9654;&ensp;Watch on YouTube
+    </a>
+    <a href="#contact" class="btn-ghost">
+      Book a Session &rarr;
+    </a>
+  </div>
+
+  <div class="hero-proof">
+    <div class="proof-stat">
+      <span class="num">$0</span>
+      <span class="lbl">Monthly hosting cost</span>
+    </div>
+    <div class="proof-stat">
+      <span class="num">30 min</span>
+      <span class="lbl">Fork to live site</span>
+    </div>
+    <div class="proof-stat">
+      <span class="num">6</span>
+      <span class="lbl">Questions to build this</span>
+    </div>
+  </div>
+
+  <div class="scroll-cue">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- WHAT YOU'LL LEARN -->
+<section id="learn">
+  <div class="sec">
+    <div class="lbl">The Channel</div>
+    <h2 class="ttl">Stop renting.<br>Start owning.</h2>
+    <p class="sub">Wix and Squarespace charge you every month to live on their platform. This is different — your code, your AWS account, your site. Forever.</p>
+    <div class="rule"></div>
+    <div class="learn-grid">
+      <div class="lcard">
+        <div class="lcard-ico ic-p">🤖</div>
+        <h3>Claude Code does the building</h3>
+        <p>Answer a few questions about what you want. Claude Code writes every line — HTML, CSS, JavaScript, and backend logic. You describe your vision in plain English.</p>
+      </div>
+      <div class="lcard">
+        <div class="lcard-ico ic-e">&#9729;&#65039;</div>
+        <h3>AWS hosts it free forever</h3>
+        <p>CloudFront CDN, S3 storage, Lambda backend, DynamoDB database — all in AWS's always-free tier. Not a 12-month trial. Permanently, structurally free.</p>
+      </div>
+      <div class="lcard">
+        <div class="lcard-ico ic-a">&#128640;</div>
+        <h3>Push to deploy in 30 minutes</h3>
+        <p>Fork the repo, add 3 GitHub secrets, push a change — your site goes live. No terminal commands. No AWS console. No local setup. Push to main = deployed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="full-sec" id="how">
+  <div class="sec">
+    <div class="lbl">The Workflow</div>
+    <h2 class="ttl">Three steps.<br>One live website.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Fork the repo</h3>
+        <p>Go to GitHub, fork kapitein-cdk, and add 3 secrets — your AWS account ID, region, and a role ARN. A one-click CloudFormation template creates the role for you. Click, not code.</p>
+        <span class="step-pill">&#8776; 5 minutes</span>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Answer 6 questions</h3>
+        <p>Open the repo in the Claude Code Desktop App. Drop in the CLAUDE.md interview template. Claude asks what you want to build — you answer in plain English, like texting a friend.</p>
+        <span class="step-pill">&#8776; 10 minutes</span>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Push to go live</h3>
+        <p>Claude writes all the code. You review, push to main, and GitHub Actions deploys everything to AWS automatically. Your CloudFront URL is live and yours forever.</p>
+        <span class="step-pill">&#8776; 15 minutes</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THE STACK -->
+<section id="stack">
+  <div class="sec">
+    <div class="lbl">The Stack</div>
+    <h2 class="ttl">Enterprise infrastructure.<br>Zero monthly cost.</h2>
+    <p class="sub">The same AWS services that power million-dollar companies — running permanently on the always-free tier for you.</p>
+    <div class="rule"></div>
+    <div class="stack-grid">
+      <div class="scard">
+        <div class="scard-head"><div class="scard-ico">&#9889;</div><h4>CloudFront CDN</h4></div>
+        <p>Global content delivery. Your site loads fast everywhere in the world.</p>
+        <span class="free-tag">&#10003; ALWAYS FREE</span>
+      </div>
+      <div class="scard">
+        <div class="scard-head"><div class="scard-ico">&#129507;</div><h4>S3 Storage</h4></div>
+        <p>Static hosting for all your HTML, CSS, JavaScript, and images.</p>
+        <span class="free-tag">&#10003; ALWAYS FREE</span>
+      </div>
+      <div class="scard">
+        <div class="scard-head"><div class="scard-ico">&lambda;</div><h4>Lambda Function URL</h4></div>
+        <p>1 million free requests/month backend API. Contact forms, data, and logic — all handled.</p>
+        <span class="free-tag">&#10003; ALWAYS FREE</span>
+      </div>
+      <div class="scard">
+        <div class="scard-head"><div class="scard-ico">&#128452;&#65039;</div><h4>DynamoDB</h4></div>
+        <p>25GB database storage with free read/write capacity. No SQL knowledge needed.</p>
+        <span class="free-tag">&#10003; ALWAYS FREE</span>
+      </div>
+      <div class="scard">
+        <div class="scard-head"><div class="scard-ico">&#128260;</div><h4>GitHub Actions</h4></div>
+        <p>Automated deploys every time you push to main. Professional CI/CD at no cost.</p>
+        <span class="free-tag">&#10003; ALWAYS FREE</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<div class="full-sec" id="showcase">
+  <div class="sec">
+    <div class="lbl">What You Can Build</div>
+    <h2 class="ttl">One workflow.<br>Every type of site.</h2>
+    <p class="sub">The system that built this site can build anything. Pick an agent template, answer the questions, push to deploy.</p>
+    <div class="rule"></div>
+    <div class="show-grid">
+      <div class="show-card">
+        <div class="show-preview">
+          <div class="mock p-anim">
+            <div class="mb"></div><div class="mh"></div>
+            <div class="ml-wrap"><div class="ml"></div><div class="ml s"></div></div>
+          </div>
+        </div>
+        <div class="show-info"><h3>Animated Landing</h3><p>GSAP cinematic entrances, scroll reveals, parallax. Like the site you're on.</p></div>
+      </div>
+      <div class="show-card">
+        <div class="show-preview">
+          <div class="mock p-port">
+            <div class="mg"><div class="mt"></div><div class="mt"></div><div class="mt"></div><div class="mt"></div></div>
+          </div>
+        </div>
+        <div class="show-info"><h3>Creative Portfolio</h3><p>Filterable galleries, lightboxes, masonry layouts. For artists and creators.</p></div>
+      </div>
+      <div class="show-card">
+        <div class="show-preview">
+          <div class="mock p-biz">
+            <div class="mn"></div><div class="mh2"></div>
+            <div class="mc-wrap"><div class="mc"></div><div class="mc"></div><div class="mc"></div></div>
+          </div>
+        </div>
+        <div class="show-info"><h3>Business Site</h3><p>Services, testimonials, contact forms. Professional and conversion-ready.</p></div>
+      </div>
+      <div class="show-card">
+        <div class="show-preview">
+          <div class="mock p-saas">
+            <div class="mp"></div><div class="mbig"></div>
+            <div class="mpc-wrap"><div class="mpc"></div><div class="mpc"></div><div class="mpc"></div></div>
+          </div>
+        </div>
+        <div class="show-info"><h3>SaaS Landing Page</h3><p>Feature sections, pricing tables, waitlist forms. Built to convert.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BEHIND THE BUILD -->
+<section id="build">
+  <div class="sec">
+    <div class="lbl">Behind the Build</div>
+    <h2 class="ttl">This site was built<br>in a conversation.</h2>
+    <p class="sub">Six questions. Thirty minutes. Here's the actual interview that created exactly what you're looking at right now.</p>
+    <div class="chat-wrap" id="chatWrap"></div>
+    <div class="chat-footer" id="chatFooter">
+      <p>Your site starts the same way.</p>
+      <a href="#contact" class="btn-primary">Start your conversation &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- YOUTUBE CTA -->
+<section id="cta">
+  <div class="sec">
+    <div class="cta-box">
+      <div class="lbl">The Channel</div>
+      <h2>Watch it happen live.</h2>
+      <p>Every episode is a real build — real site, real AWS account, real deployment from zero. No edits. No shortcuts. See exactly what's possible.</p>
+      <a href="https://youtube.com/@captainai" target="_blank" class="btn-primary">
+        &#9654;&ensp;Subscribe on YouTube
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- LEAD CAPTURE -->
+<section id="contact">
+  <div class="sec" style="max-width:720px">
+    <div class="lbl">Personalized Session</div>
+    <h2 class="ttl">We'll build your site<br>together.</h2>
+    <p class="sub">Tell me what you want to build. I'll walk you through the entire workflow live — your idea, your AWS account, your site going live on screen.</p>
+    <div class="form-box">
+      <form id="leadForm">
+        <div class="form-row">
+          <div class="fg"><label>Your name</label><input type="text" name="name" placeholder="Alex" required></div>
+          <div class="fg"><label>Email address</label><input type="email" name="email" placeholder="alex@example.com" required></div>
+        </div>
+        <div class="fg">
+          <label>What do you want to build?</label>
+          <textarea name="message" placeholder="A landing page for my coaching practice, a portfolio for my photography, a site for my handmade jewelry store..." required></textarea>
+        </div>
+        <button type="submit" class="form-submit">Get Your Personalized Session &rarr;</button>
+      </form>
+      <div class="form-success" id="formSuccess">
+        <span class="ck">&#9989;</span>
+        <h3>You're on the list.</h3>
+        <p>I'll reach out within 48 hours to schedule your session.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Built with <a href="https://claude.ai/code" target="_blank">Claude Code</a> &middot; Hosted on <a href="https://aws.amazon.com" target="_blank">AWS</a> &middot; Free forever &middot; <a href="https://github.com/gasamoma/kapitein-cdk" target="_blank">Fork this repo</a></p>
+</footer>
+
+<script>
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+
+  /* HERO */
+  const tl = gsap.timeline({ delay: 0.2 });
+  const split = new SplitText('.hero-h1', { type: 'words,chars' });
+
+  tl.from('.hero-badge', { opacity: 0, y: -16, duration: 0.6, ease: 'power3.out' })
+    .from(split.chars, {
+      opacity: 0, y: 60, rotateX: -80,
+      stagger: { amount: 0.7, from: 'start' },
+      duration: 0.65, ease: 'power4.out'
+    }, '-=0.3')
+    .to('.hero-sub',     { opacity: 1, duration: 0.7, ease: 'power2.out' }, '-=0.15')
+    .to('.hero-actions', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.4')
+    .to('.hero-proof',   { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.3')
+    .to('.scroll-cue',   { opacity: 1, duration: 0.4 }, '-=0.1');
+
+  /* orb parallax */
+  const scrub = (el, y, x) => gsap.to(el, { y, x: x||0, ease:'none',
+    scrollTrigger:{ trigger:'#hero', start:'top top', end:'bottom top', scrub:1.2 }
+  });
+  scrub('.orb-1', -100);
+  scrub('.orb-2', -60, -30);
+  scrub('.orb-3', -80, 20);
+  scrub('.hero-grid', -50);
+
+  /* section title splits */
+  document.querySelectorAll('h2.ttl').forEach(el => {
+    const s = new SplitText(el, { type: 'lines' });
+    gsap.from(s.lines, {
+      opacity: 0, y: 50, stagger: 0.1, duration: 0.8, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 88%' }
+    });
+  });
+
+  /* learn cards */
+  gsap.from('.lcard', {
+    opacity:0, y:60, stagger:0.12, duration:0.8, ease:'power3.out',
+    scrollTrigger:{ trigger:'.learn-grid', start:'top 85%' }
+  });
+
+  /* steps */
+  gsap.from('.step', {
+    opacity:0, y:50, stagger:0.15, duration:0.8, ease:'power3.out',
+    scrollTrigger:{ trigger:'.steps', start:'top 85%' }
+  });
+
+  /* stack cards */
+  gsap.from('.scard', {
+    opacity:0, y:40, stagger:0.08, duration:0.7, ease:'power2.out',
+    scrollTrigger:{ trigger:'.stack-grid', start:'top 85%' }
+  });
+
+  /* showcase */
+  gsap.from('.show-card', {
+    opacity:0, y:60, scale:0.94, stagger:0.1, duration:0.8, ease:'power3.out',
+    scrollTrigger:{ trigger:'.show-grid', start:'top 85%' }
+  });
+
+  /* chat messages */
+  const convo = [
+    { r:'claude', t:'What kind of website do you want to build?' },
+    { r:'user',   t:'A landing page for a YouTube channel that teaches people to build websites with AI and deploy them free on AWS. The site itself is proof of the workflow.' },
+    { r:'claude', t:'Does your site need user accounts — will visitors need to log in for anything?' },
+    { r:'user',   t:"No need to register. Everyone sees the same content. I do want to capture leads of people interested in a personalized session." },
+    { r:'claude', t:'Who is this site for? Describe your ideal visitor in plain language.' },
+    { r:'user',   t:"Non-technical people who feel stuck — small business owners, freelancers, coaches, creators. They've tried Wix or Squarespace, paying a monthly fee, feeling like they don't own anything." },
+    { r:'claude', t:"What's the most important thing you want visitors to do when they land on the site?" },
+    { r:'user',   t:'See a very professional and unique site with modern animations — then subscribe to the YouTube channel or book a personalized session.' },
+    { r:'claude', t:'How should the site feel? And how aggressive should the animations be?' },
+    { r:'user',   t:'Dark and cinematic. Bold, confident, premium — the kind of site you\'d see from a high-end SaaS or AAA product launch. Full GSAP cinematic entrances. Someone who\'s never touched code should say "Claude Code built THIS?"' },
+    { r:'claude', t:'What sections does the site need?' },
+    { r:'user',   t:"Hero, What You'll Learn, How It Works, The Stack, Showcase, YouTube CTA, Lead capture form — and include this conversation as an animated example of how the site was built." },
+  ];
+
+  const wrap = document.getElementById('chatWrap');
+  convo.forEach(msg => {
+    const d = document.createElement('div');
+    d.className = `cmsg ${msg.r}`;
+    d.innerHTML = `<div class="cav">${msg.r==='claude'?'&#10022;':'&#128100;'}</div><div class="cbubble">${msg.t}</div>`;
+    wrap.appendChild(d);
+  });
+
+  document.querySelectorAll('.cmsg').forEach(el => {
+    const isUser = el.classList.contains('user');
+    gsap.from(el, {
+      opacity:0, x: isUser ? 24 : -24, y:10, duration:0.55, ease:'power2.out',
+      scrollTrigger:{ trigger:el, start:'top 88%' }
+    });
+  });
+
+  gsap.to('#chatFooter', {
+    opacity:1, duration:0.6, ease:'power2.out',
+    scrollTrigger:{ trigger:'#chatFooter', start:'top 90%' }
+  });
+
+  /* cta + form */
+  gsap.from('.cta-box', {
+    opacity:0, y:50, duration:0.9, ease:'power3.out',
+    scrollTrigger:{ trigger:'.cta-box', start:'top 82%' }
+  });
+  gsap.from('.form-box', {
+    opacity:0, y:40, duration:0.8, ease:'power2.out',
+    scrollTrigger:{ trigger:'.form-box', start:'top 85%' }
+  });
+
+  /* nav border */
+  ScrollTrigger.create({
+    trigger:'#hero', start:'bottom 80%',
+    onEnter:()=>document.getElementById('nav').style.borderBottomColor='rgba(255,255,255,0.14)',
+    onLeaveBack:()=>document.getElementById('nav').style.borderBottomColor='rgba(255,255,255,0.07)',
+  });
+
+  /* lead form */
+  document.getElementById('leadForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('.form-submit');
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+
+    const payload = {
+      name: form.name.value.trim(),
+      email: form.email.value.trim(),
+      message: form.message.value.trim(),
+      source: 'captain-ai-landing',
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      const cfg = await fetch('/config.json').then(r=>r.json()).catch(()=>({}));
+      if (cfg.apiUrl) {
+        await fetch(cfg.apiUrl, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload)
+        });
+      }
+      form.style.display = 'none';
+      const s = document.getElementById('formSuccess');
+      s.style.display = 'block';
+      gsap.from(s, { opacity:0, scale:0.88, duration:0.55, ease:'back.out(1.5)' });
+    } catch {
+      btn.textContent = 'Get Your Personalized Session →';
+      btn.disabled = false;
+    }
+  });
+</script>
 </body>
 </html>
