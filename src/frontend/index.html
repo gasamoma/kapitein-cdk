@@ -72,19 +72,17 @@
       background: var(--bg);
       pointer-events: none;
     }
-    #i-capi, #i-captain {
+    #i-word {
       font-family: 'Space Grotesk', sans-serif;
       font-size: clamp(3.5rem, 13vw, 9rem);
       font-weight: 700;
       letter-spacing: -0.04em;
       line-height: 1;
       white-space: nowrap;
-      position: absolute;
+      color: var(--text);
     }
-    #i-capi { color: var(--text); }
-    #i-captain { opacity: 0; color: var(--text); }
-    #i-captain em { color: var(--accent); font-style: normal; }
-    .ic { display: inline-block; }
+    .iw { display: inline-block; }
+    .iw-hl { color: var(--accent); }
 
     /* LOGO (hidden until intro flies it in) */
     .logo {
@@ -681,12 +679,11 @@
 </head>
 <body>
 
-<!-- INTRO OVERLAY -->
+<!-- INTRO OVERLAY — letter spans let Flip animate A and I flying to their AI positions -->
 <div id="intro">
-  <div id="i-capi">
-    <span class="ic">c</span><span class="ic" id="ic-a">a</span><span class="ic">p</span><span class="ic" id="ic-i">i</span>
+  <div id="i-word">
+    <span class="iw" id="iw-c">c</span><span class="iw iw-hl" id="iw-a">a</span><span class="iw" id="iw-p">p</span><span class="iw iw-hl" id="iw-i">i</span>
   </div>
-  <div id="i-captain">Captain <em>AI</em></div>
 </div>
 
 <nav id="nav">
@@ -1015,97 +1012,103 @@
 <script>
   gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin, Flip);
 
+  /* Hide hero content immediately — prevents flash during intro */
+  gsap.set(['.hero-badge', '.hw', '.hero-sub', '.hero-actions', '.hero-proof', '.scroll-cue'], { opacity: 0 });
+
   /* ── INTRO SEQUENCE ─────────────────────────────────────────────── */
   function runIntro() {
-    const introTl = gsap.timeline();
+    const word  = document.getElementById('i-word');
+    const iwa   = document.getElementById('iw-a'); // purple a (will become A in AI)
+    const iwi   = document.getElementById('iw-i'); // purple i (will become I in AI)
+    const tl    = gsap.timeline();
 
-    // 1. "capi" fades up
-    introTl.from('#i-capi', { opacity: 0, y: 28, duration: 0.65, ease: 'power3.out' }, 0.25)
+    // 1. "capi" fades up large and centered
+    tl.from(word, { opacity: 0, y: 28, duration: 0.65, ease: 'power3.out' }, 0.25)
 
-    // 2. 'a' and 'i' glow indigo → "cApI"
-    .to(['#ic-a', '#ic-i'], {
-      color: 'var(--accent)',
-      textShadow: '0 0 28px rgba(99,102,241,0.85), 0 0 56px rgba(99,102,241,0.35)',
+    // 2. 'a' and 'i' glow — they're already accent-colored via .iw-hl, just add glow + scale
+    .to([iwa, iwi], {
+      textShadow: '0 0 28px rgba(99,102,241,0.9), 0 0 56px rgba(99,102,241,0.4)',
       scale: 1.1,
       duration: 0.5,
       ease: 'power2.out'
     }, 1.1)
 
-    // 3. White glowing clones of A and I detach and drift right
+    // 3. Flip: purple A and I fly to their new positions as "AI" in "capitan AI"
     .call(() => {
-      ['#ic-a', '#ic-i'].forEach((sel, idx) => {
-        const el = document.querySelector(sel);
-        const rect = el.getBoundingClientRect();
-        const fs = parseFloat(getComputedStyle(el).fontSize);
-        const clone = document.createElement('span');
-        clone.textContent = idx === 0 ? 'A' : 'I';
-        clone.style.cssText = `
-          position:fixed;left:${rect.left}px;top:${rect.top}px;
-          width:${rect.width}px;height:${rect.height}px;
-          font-family:'Space Grotesk',sans-serif;font-weight:700;
-          font-size:${fs}px;line-height:1;letter-spacing:-0.04em;
-          color:#fff;text-shadow:0 0 36px rgba(255,255,255,0.95),0 0 72px rgba(255,255,255,0.5);
-          pointer-events:none;z-index:600;
-          display:flex;align-items:center;justify-content:center;
-        `;
-        document.body.appendChild(clone);
-        gsap.to(clone, {
-          x: fs * (3.2 + idx * 1.2),
-          opacity: 0,
-          duration: 0.7,
-          ease: 'power3.inOut',
-          onComplete: () => clone.remove()
+      // Capture positions of the two purple letters BEFORE DOM changes
+      const state = Flip.getState([iwa, iwi]);
+
+      // Insert white replacement 'a' and 'i' at their current positions in "capi"
+      const wa = document.createElement('span');
+      wa.className = 'iw'; wa.textContent = 'a';
+      iwa.before(wa);
+
+      const wi = document.createElement('span');
+      wi.className = 'iw'; wi.textContent = 'i';
+      iwi.before(wi);
+
+      // Add "tan " text (the letters that complete "capitan ")
+      const tanEl = document.createElement('span');
+      tanEl.className = 'iw'; tanEl.textContent = 'tan ';
+      gsap.set(tanEl, { opacity: 0 });
+      word.appendChild(tanEl);
+
+      // Move purple iwa and iwi to end of word — they are now the "AI"
+      iwa.remove(); iwi.remove();
+      iwa.textContent = 'A';
+      iwi.textContent = 'I';
+      word.appendChild(iwa);
+      word.appendChild(iwi);
+
+      // Flip animates them from captured positions to their new DOM positions
+      Flip.from(state, {
+        duration: 0.7,
+        ease: 'power3.inOut',
+        onStart: () => {
+          // White a and i letters appear at the original positions
+          gsap.from([wa, wi], { opacity: 0, duration: 0.3 });
+          // "tan " reveals slightly after
+          gsap.to(tanEl, { opacity: 1, duration: 0.4, delay: 0.15 });
+          // Remove glow now that letters are moving
+          gsap.to([iwa, iwi], { textShadow: 'none', scale: 1, duration: 0.3 });
+        },
+        onComplete: flyToNav
+      });
+    }, [], '+=0.4');
+  }
+
+  /* ── FLY "capitan AI" TO NAV HEADER ─────────────────────────────── */
+  function flyToNav() {
+    const word    = document.getElementById('i-word');
+    const navLogo = document.querySelector('.logo');
+
+    gsap.set(navLogo, { visibility: 'visible', opacity: 0 });
+
+    const wRect = word.getBoundingClientRect();
+    const nRect = navLogo.getBoundingClientRect();
+    const scale = nRect.height / wRect.height;
+    const tx    = (nRect.left + nRect.width  / 2) - (wRect.left + wRect.width  / 2);
+    const ty    = (nRect.top  + nRect.height / 2) - (wRect.top  + wRect.height / 2);
+
+    gsap.to(word, {
+      x: tx, y: ty, scale,
+      transformOrigin: 'center center',
+      duration: 0.75,
+      delay: 0.35,
+      ease: 'power4.inOut',
+      onComplete: () => {
+        gsap.set(navLogo, { opacity: 1 });
+        gsap.to('#intro', {
+          opacity: 0, duration: 0.3,
+          onComplete: () => { document.getElementById('intro').remove(); startHero(); }
         });
-      });
-    }, [], '+=0.15')
-
-    // 4. Crossfade "capi" → "Captain AI"
-    .to('#i-capi',    { opacity: 0, duration: 0.4, ease: 'power2.in' }, '+=0.35')
-    .fromTo('#i-captain',
-      { opacity: 0, x: -18 },
-      { opacity: 1, x: 0, duration: 0.55, ease: 'power3.out' },
-    '-=0.2')
-
-    // 5. Brief pause, then use Flip to fly "Captain AI" to nav position
-    .call(() => {
-      const captain = document.getElementById('i-captain');
-      const navLogo = document.querySelector('.logo');
-
-      // Make real nav logo visible so Flip can measure it (but keep opacity 0)
-      gsap.set(navLogo, { visibility: 'visible', opacity: 0 });
-
-      // Measure both elements
-      const cRect = captain.getBoundingClientRect();
-      const nRect = navLogo.getBoundingClientRect();
-      const scale = nRect.height / cRect.height;
-      const targetX = (nRect.left + nRect.width / 2) - (cRect.left + cRect.width / 2);
-      const targetY = (nRect.top  + nRect.height / 2) - (cRect.top  + cRect.height / 2);
-
-      // Animate captain to nav position
-      gsap.to(captain, {
-        x: targetX, y: targetY,
-        scale: scale,
-        transformOrigin: 'center center',
-        duration: 0.75,
-        ease: 'power4.inOut',
-        onComplete: () => {
-          // Swap: show real logo, fade out intro
-          gsap.set(navLogo, { opacity: 1 });
-          gsap.to('#intro', {
-            opacity: 0, duration: 0.3,
-            onComplete: () => {
-              document.getElementById('intro').remove();
-              startHero();
-            }
-          });
-        }
-      });
-    }, [], '+=0.45');
+      }
+    });
   }
 
   /* ── HERO (fires after intro completes) ──────────────────────────── */
   function startHero() {
-    /* set initial states */
+    /* set animation initial states */
     gsap.set('.hw', { opacity: 0, y: 60, rotateX: -60, transformPerspective: 600, transformOrigin: 'center bottom' });
     gsap.set(['.hero-badge', '.hero-sub', '.hero-actions', '.hero-proof', '.scroll-cue'], { opacity: 0, y: 20 });
 
