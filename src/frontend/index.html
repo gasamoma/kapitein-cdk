@@ -687,7 +687,7 @@
 </div>
 
 <nav id="nav">
-  <a class="logo" href="#">Captain <em>AI</em></a>
+  <a class="logo" href="#">capi <em>AI</em></a>
   <a href="#contact" class="nav-btn">Book a Session</a>
 </nav>
 
@@ -1048,12 +1048,12 @@
       iwi.before(wi);
 
       // Add "tan " text (the letters that complete "capitan ")
-      const tanEl = document.createElement('span');
-      tanEl.className = 'iw'; tanEl.textContent = 'tan ';
-      gsap.set(tanEl, { opacity: 0 });
-      word.appendChild(tanEl);
+      const sp = document.createElement('span');
+      sp.className = 'iw'; sp.textContent = ' ';
+      gsap.set(sp, { opacity: 0 });
+      word.appendChild(sp);
 
-      // Move purple iwa and iwi to end of word — they are now the "AI"
+      // Move purple iwa and iwi to end — they become A and I
       iwa.remove(); iwi.remove();
       iwa.textContent = 'A';
       iwi.textContent = 'I';
@@ -1067,8 +1067,7 @@
         onStart: () => {
           // White a and i letters appear at the original positions
           gsap.from([wa, wi], { opacity: 0, duration: 0.3 });
-          // "tan " reveals slightly after
-          gsap.to(tanEl, { opacity: 1, duration: 0.4, delay: 0.15 });
+          gsap.to(sp, { opacity: 1, duration: 0.2, delay: 0.25 });
           // Remove glow now that letters are moving
           gsap.to([iwa, iwi], { textShadow: 'none', scale: 1, duration: 0.3 });
         },
