@@ -10,9 +10,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/SplitText.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrambleTextPlugin.min.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -151,13 +152,14 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+    .hw { display: inline-block; }
+
     .hero-sub {
       font-size: clamp(1rem,2vw,1.2rem);
       color: var(--muted);
       max-width: 580px;
       margin-bottom: 52px;
       line-height: 1.8;
-      opacity: 0;
     }
     .hero-actions {
       display: flex;
@@ -165,7 +167,6 @@
       justify-content: center;
       flex-wrap: wrap;
       margin-bottom: 80px;
-      opacity: 0;
     }
     .btn-primary {
       padding: 16px 36px;
@@ -208,7 +209,6 @@
       gap: 48px;
       justify-content: center;
       flex-wrap: wrap;
-      opacity: 0;
     }
     .proof-stat { text-align: center; }
     .proof-stat .num {
@@ -465,7 +465,7 @@
       background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2);
       border-radius:16px 4px 16px 16px;color:var(--text);
     }
-    .chat-footer { text-align:center;margin-top:56px;opacity:0; }
+    .chat-footer { text-align:center;margin-top:56px; }
     .chat-footer p { color:var(--muted);margin-bottom:24px;font-size:0.95rem; }
 
     /* CTA */
@@ -559,7 +559,9 @@
   </div>
 
   <h1 class="hero-h1">
-    Build Real<br>Websites.<br><span class="grad">Deploy Free.</span>
+    <span class="hw">Build</span>&thinsp;<span class="hw">Real</span><br>
+    <span class="hw">Websites.</span><br>
+    <span class="hw grad">Deploy Free.</span>
   </h1>
 
   <p class="hero-sub">
@@ -797,22 +799,25 @@
 </footer>
 
 <script>
-  gsap.registerPlugin(ScrollTrigger, SplitText);
+  gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin);
 
-  /* HERO */
+  /* set initial states via GSAP (not CSS) so JS errors can't permanently hide content */
+  gsap.set('.hw', { opacity: 0, y: 60, rotateX: -60, transformPerspective: 600, transformOrigin: 'center bottom' });
+  gsap.set(['.hero-badge', '.hero-sub', '.hero-actions', '.hero-proof', '.scroll-cue'], { opacity: 0, y: 20 });
+
+  /* HERO TIMELINE */
   const tl = gsap.timeline({ delay: 0.2 });
-  const split = new SplitText('.hero-h1', { type: 'words,chars' });
 
-  tl.from('.hero-badge', { opacity: 0, y: -16, duration: 0.6, ease: 'power3.out' })
-    .from(split.chars, {
-      opacity: 0, y: 60, rotateX: -80,
-      stagger: { amount: 0.7, from: 'start' },
-      duration: 0.65, ease: 'power4.out'
+  tl.to('.hero-badge', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' })
+    .to('.hw', {
+      opacity: 1, y: 0, rotateX: 0,
+      stagger: { amount: 0.55, from: 'start' },
+      duration: 0.7, ease: 'power4.out'
     }, '-=0.3')
-    .to('.hero-sub',     { opacity: 1, duration: 0.7, ease: 'power2.out' }, '-=0.15')
-    .to('.hero-actions', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.4')
-    .to('.hero-proof',   { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.3')
-    .to('.scroll-cue',   { opacity: 1, duration: 0.4 }, '-=0.1');
+    .to('.hero-sub',     { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, '-=0.2')
+    .to('.hero-actions', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4')
+    .to('.hero-proof',   { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.35')
+    .to('.scroll-cue',   { opacity: 1, y: 0, duration: 0.4 }, '-=0.1');
 
   /* orb parallax */
   const scrub = (el, y, x) => gsap.to(el, { y, x: x||0, ease:'none',
@@ -823,10 +828,10 @@
   scrub('.orb-3', -80, 20);
   scrub('.hero-grid', -50);
 
-  /* section title splits */
+  /* section titles — SplitText line-by-line reveal */
   document.querySelectorAll('h2.ttl').forEach(el => {
-    const s = new SplitText(el, { type: 'lines' });
-    gsap.from(s.lines, {
+    const lines = new SplitText(el, { type: 'lines', linesClass: 'line-wrap' });
+    gsap.from(lines.lines, {
       opacity: 0, y: 50, stagger: 0.1, duration: 0.8, ease: 'power3.out',
       scrollTrigger: { trigger: el, start: 'top 88%' }
     });
@@ -888,8 +893,8 @@
     });
   });
 
-  gsap.to('#chatFooter', {
-    opacity:1, duration:0.6, ease:'power2.out',
+  gsap.from('#chatFooter', {
+    opacity:0, y:20, duration:0.6, ease:'power2.out',
     scrollTrigger:{ trigger:'#chatFooter', start:'top 90%' }
   });
 
