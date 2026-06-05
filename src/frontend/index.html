@@ -14,6 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrambleTextPlugin.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Flip.min.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -60,6 +61,32 @@
       border-bottom: 1px solid var(--border);
       transition: border-color 0.3s;
     }
+    /* INTRO */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      pointer-events: none;
+    }
+    #i-capi, #i-captain {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3.5rem, 13vw, 9rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      white-space: nowrap;
+      position: absolute;
+    }
+    #i-capi { color: var(--text); }
+    #i-captain { opacity: 0; color: var(--text); }
+    #i-captain em { color: var(--accent); font-style: normal; }
+    .ic { display: inline-block; }
+
+    /* LOGO (hidden until intro flies it in) */
     .logo {
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
@@ -67,8 +94,34 @@
       letter-spacing: -0.02em;
       color: var(--text);
       text-decoration: none;
+      visibility: hidden;
     }
     .logo em { color: var(--accent); font-style: normal; }
+
+    /* BROWSER CHROME (showcase cards) */
+    .sc-chrome {
+      height: 30px;
+      background: #141420;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .sc-dots { display: flex; gap: 5px; }
+    .sc-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .sc-dot.rd { background: #ff5f57; }
+    .sc-dot.yw { background: #febc2e; }
+    .sc-dot.gr { background: #28c840; }
+    .sc-url {
+      flex: 1; height: 14px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      font-family: monospace; font-size: 9px;
+      color: rgba(255,255,255,0.22);
+      display: flex; align-items: center; padding: 0 7px;
+    }
     .nav-btn {
       padding: 10px 22px;
       background: var(--accent);
@@ -382,58 +435,145 @@
 
     /* SHOWCASE */
     .show-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:24px;margin-top:64px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 64px;
     }
     .show-card {
-      border-radius:var(--r-lg);overflow:hidden;
-      border:1px solid var(--border);
-      background:var(--surface);
-      transition:border-color 0.3s,transform 0.3s;
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: border-color 0.3s, transform 0.3s;
+      display: flex;
+      flex-direction: column;
     }
-    .show-card:hover { border-color:rgba(99,102,241,0.3);transform:translateY(-8px); }
+    .show-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-8px); }
     .show-preview {
-      height:180px;
-      display:flex;align-items:center;justify-content:center;
-      position:relative;overflow:hidden;
+      display: flex;
+      flex-direction: column;
+      height: 260px;
+      overflow: hidden;
+      position: relative;
     }
-    .show-preview::after {
-      content:'';position:absolute;inset:0;
-      background:linear-gradient(to bottom,transparent 40%,rgba(13,13,20,0.9));
+    .show-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
     }
     .mock { width:80%;height:80%;position:relative;border-radius:8px;overflow:hidden; }
 
-    /* animated landing mockup */
-    .p-anim { background:linear-gradient(160deg,#0f0f1e 0%,#1a1040 50%,#0d0d14 100%); }
-    .p-anim .mb { height:28px;background:rgba(99,102,241,0.2);margin:12px 10px 8px;border-radius:4px; }
-    .p-anim .mh { height:60px;background:linear-gradient(90deg,rgba(99,102,241,0.3),rgba(139,92,246,0.2));margin:0 10px;border-radius:4px; }
-    .p-anim .ml-wrap { padding:10px;display:flex;flex-direction:column;gap:6px; }
-    .p-anim .ml { height:6px;border-radius:3px;background:rgba(255,255,255,0.08); }
-    .p-anim .ml.s { width:60%; }
+    /* === REALISTIC MINI-PAGE MOCKUPS === */
+    .mini-page { width:100%;height:100%;display:flex;flex-direction:column;font-size:0; }
 
-    /* portfolio mockup */
-    .p-port { background:linear-gradient(160deg,#0f0c1a 0%,#1a0d2e 50%,#0d0d14 100%); }
-    .p-port .mg { display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px;height:100%; }
-    .p-port .mt { border-radius:4px; }
-    .p-port .mt:nth-child(1){background:rgba(139,92,246,0.25)}
-    .p-port .mt:nth-child(2){background:rgba(99,102,241,0.15);margin-top:16px}
-    .p-port .mt:nth-child(3){background:rgba(167,139,250,0.2)}
-    .p-port .mt:nth-child(4){background:rgba(99,102,241,0.1);margin-top:-16px}
+    /* shared mini elements */
+    .m-nav-bar { height:22px;display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0; }
+    .m-nav-logo { width:40px;height:7px;border-radius:2px; }
+    .m-nav-links { display:flex;gap:5px;margin-left:auto; }
+    .m-nav-link { width:18px;height:5px;border-radius:2px; }
+    .m-hero-block { flex:0 0 auto;padding:14px 12px 10px; }
+    .m-h-tag { height:5px;width:40px;border-radius:2px;margin-bottom:7px; }
+    .m-h1 { height:10px;border-radius:2px;margin-bottom:5px; }
+    .m-h1.full { width:90%; }
+    .m-h1.wide { width:75%; }
+    .m-h1.med { width:60%; }
+    .m-h1.sm { width:40%; }
+    .m-sub-line { height:5px;border-radius:2px;margin-bottom:3px; }
+    .m-sub-line.full { width:85%; }
+    .m-sub-line.med { width:65%; }
+    .m-cta-row { display:flex;gap:5px;margin-top:9px; }
+    .m-cta { height:16px;border-radius:3px; }
+    .m-cta.solid { width:52px; }
+    .m-cta.ghost { width:40px;background:transparent!important;border:1px solid; }
+    .m-cards-row { display:flex;gap:6px;padding:8px 12px;flex-shrink:0; }
+    .m-card-mini { flex:1;border-radius:4px;padding:6px;display:flex;flex-direction:column;gap:3px; }
+    .m-card-icon { width:12px;height:12px;border-radius:2px;margin-bottom:3px; }
+    .m-card-line { height:4px;border-radius:1px; }
+    .m-card-line.full { width:100%; }
+    .m-card-line.med { width:70%; }
+    .m-grid-block { flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;padding:8px 12px; }
+    .m-grid-cell { border-radius:4px;overflow:hidden;position:relative; }
+    .m-grid-cell::after { content:'';position:absolute;inset:0;background:rgba(0,0,0,0.15); }
+    .m-price-row { display:flex;gap:5px;padding:8px 12px;flex-shrink:0; }
+    .m-price-card { flex:1;border-radius:5px;padding:7px;display:flex;flex-direction:column;gap:3px;border:1px solid; }
+    .m-price-card.feat { flex:1.2; }
+    .m-price-line { height:4px;border-radius:1px; }
+    .m-price-line.lg { height:8px;margin-bottom:2px; }
+    .m-price-line.full { width:100%; }
+    .m-price-line.med { width:70%; }
+    .m-price-btn { height:12px;border-radius:2px;margin-top:4px; }
+    .m-testim { display:flex;gap:5px;padding:6px 12px;flex-shrink:0; }
+    .m-testim-card { flex:1;border-radius:4px;padding:5px; }
+    .m-avatar { width:14px;height:14px;border-radius:50%;margin-bottom:4px; }
+    .m-t-line { height:3px;border-radius:1px;margin-bottom:2px; }
+    .m-t-line.full { width:95%; }
+    .m-t-line.med { width:65%; }
 
-    /* business site mockup */
-    .p-biz { background:linear-gradient(160deg,#080d1a 0%,#0d1e38 50%,#060c16 100%); }
-    .p-biz .mn { height:22px;background:rgba(59,130,246,0.2);margin:10px;border-radius:3px; }
-    .p-biz .mh2 { margin:0 10px;height:50px;background:linear-gradient(90deg,rgba(59,130,246,0.25),transparent);border-radius:4px; }
-    .p-biz .mc-wrap { display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:8px 10px; }
-    .p-biz .mc { height:28px;border-radius:3px;background:rgba(59,130,246,0.1); }
+    /* ANIMATED LANDING — dark indigo */
+    .p-anim { background:linear-gradient(160deg,#0a0a1a,#12103a); }
+    .p-anim .m-nav-bar { background:rgba(99,102,241,0.08);border-bottom:1px solid rgba(99,102,241,0.1); }
+    .p-anim .m-nav-logo { background:rgba(99,102,241,0.5); }
+    .p-anim .m-nav-link { background:rgba(255,255,255,0.15); }
+    .p-anim .m-h-tag { background:rgba(99,102,241,0.4); }
+    .p-anim .m-h1 { background:rgba(255,255,255,0.75); }
+    .p-anim .m-h1:last-child { background:linear-gradient(90deg,rgba(99,102,241,0.8),rgba(139,92,246,0.6)); }
+    .p-anim .m-sub-line { background:rgba(255,255,255,0.18); }
+    .p-anim .m-cta.solid { background:rgba(99,102,241,0.8); }
+    .p-anim .m-cta.ghost { border-color:rgba(255,255,255,0.25); }
+    .p-anim .m-card-mini { background:rgba(255,255,255,0.05);border:1px solid rgba(99,102,241,0.15); }
+    .p-anim .m-card-icon { background:rgba(99,102,241,0.3); }
+    .p-anim .m-card-line { background:rgba(255,255,255,0.15); }
 
-    /* saas mockup */
-    .p-saas { background:linear-gradient(160deg,#060812 0%,#0c0f22 50%,#060810 100%); }
-    .p-saas .mp { height:14px;width:50%;margin:14px auto 6px;border-radius:100px;background:rgba(99,102,241,0.2); }
-    .p-saas .mbig { height:32px;margin:0 10px;border-radius:4px;background:linear-gradient(90deg,rgba(99,102,241,0.3),rgba(139,92,246,0.15)); }
-    .p-saas .mpc-wrap { display:flex;gap:5px;padding:8px 10px; }
-    .p-saas .mpc { flex:1;height:36px;border-radius:4px;border:1px solid rgba(99,102,241,0.2); }
+    /* CREATIVE PORTFOLIO — purple / editorial */
+    .p-port { background:linear-gradient(160deg,#0e0b1a,#1a0d2e); }
+    .p-port .m-nav-bar { background:transparent; }
+    .p-port .m-nav-logo { background:rgba(167,139,250,0.5); }
+    .p-port .m-nav-link { background:rgba(255,255,255,0.15); }
+    .p-port .m-h-tag { background:rgba(167,139,250,0.35); }
+    .p-port .m-h1 { background:rgba(255,255,255,0.8); }
+    .p-port .m-sub-line { background:rgba(255,255,255,0.2); }
+    .p-port .m-cta.solid { background:rgba(167,139,250,0.7); }
+    .p-port .m-grid-cell:nth-child(1) { background:linear-gradient(135deg,rgba(139,92,246,0.4),rgba(99,102,241,0.3)); }
+    .p-port .m-grid-cell:nth-child(2) { background:linear-gradient(135deg,rgba(167,139,250,0.3),rgba(139,92,246,0.2)); }
+    .p-port .m-grid-cell:nth-child(3) { background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(167,139,250,0.35)); }
+    .p-port .m-grid-cell:nth-child(4) { background:linear-gradient(135deg,rgba(139,92,246,0.35),rgba(99,102,241,0.25)); }
+
+    /* BUSINESS SITE — navy / professional */
+    .p-biz { background:linear-gradient(160deg,#07101f,#0d1e38); }
+    .p-biz .m-nav-bar { background:rgba(30,58,138,0.4);border-bottom:1px solid rgba(59,130,246,0.1); }
+    .p-biz .m-nav-logo { background:rgba(59,130,246,0.5); }
+    .p-biz .m-nav-link { background:rgba(255,255,255,0.15); }
+    .p-biz .m-h-tag { background:rgba(59,130,246,0.4); }
+    .p-biz .m-h1 { background:rgba(255,255,255,0.8); }
+    .p-biz .m-sub-line { background:rgba(255,255,255,0.2); }
+    .p-biz .m-cta.solid { background:rgba(59,130,246,0.7); }
+    .p-biz .m-cta.ghost { border-color:rgba(255,255,255,0.25); }
+    .p-biz .m-card-mini { background:rgba(30,58,138,0.2);border:1px solid rgba(59,130,246,0.1); }
+    .p-biz .m-card-icon { background:rgba(59,130,246,0.4); }
+    .p-biz .m-card-line { background:rgba(255,255,255,0.15); }
+    .p-biz .m-testim-card { background:rgba(255,255,255,0.04);border:1px solid rgba(59,130,246,0.08); }
+    .p-biz .m-avatar { background:rgba(59,130,246,0.35); }
+    .p-biz .m-t-line { background:rgba(255,255,255,0.12); }
+
+    /* SAAS — dark + emerald */
+    .p-saas { background:linear-gradient(160deg,#060b12,#0c1520); }
+    .p-saas .m-nav-bar { background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06); }
+    .p-saas .m-nav-logo { background:rgba(16,185,129,0.5); }
+    .p-saas .m-nav-link { background:rgba(255,255,255,0.12); }
+    .p-saas .m-h-tag { background:rgba(16,185,129,0.3);width:55px; }
+    .p-saas .m-h1 { background:rgba(255,255,255,0.8); }
+    .p-saas .m-h1:last-child { background:rgba(16,185,129,0.6); }
+    .p-saas .m-sub-line { background:rgba(255,255,255,0.15); }
+    .p-saas .m-cta.solid { background:rgba(16,185,129,0.7); }
+    .p-saas .m-cta.ghost { border-color:rgba(255,255,255,0.2); }
+    .p-saas .m-price-card { background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.07); }
+    .p-saas .m-price-card.feat { background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25); }
+    .p-saas .m-price-line { background:rgba(255,255,255,0.12); }
+    .p-saas .m-price-line.lg { background:rgba(255,255,255,0.7); }
+    .p-saas .m-price-card.feat .m-price-line.lg { background:rgba(16,185,129,0.8); }
+    .p-saas .m-price-btn { background:rgba(255,255,255,0.08); }
+    .p-saas .m-price-card.feat .m-price-btn { background:rgba(16,185,129,0.7); }
 
     .show-info { padding:20px 24px; }
     .show-info h3 { font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;margin-bottom:4px; }
@@ -541,8 +681,16 @@
 </head>
 <body>
 
+<!-- INTRO OVERLAY -->
+<div id="intro">
+  <div id="i-capi">
+    <span class="ic">c</span><span class="ic" id="ic-a">a</span><span class="ic">p</span><span class="ic" id="ic-i">i</span>
+  </div>
+  <div id="i-captain">Captain <em>AI</em></div>
+</div>
+
 <nav id="nav">
-  <a class="logo" href="#"><em>Captain</em> AI</a>
+  <a class="logo" href="#">Captain <em>AI</em></a>
   <a href="#contact" class="nav-btn">Book a Session</a>
 </nav>
 
@@ -700,41 +848,107 @@
     <p class="sub">The system that built this site can build anything. Pick an agent template, answer the questions, push to deploy.</p>
     <div class="rule"></div>
     <div class="show-grid">
+
+      <!-- Animated Landing -->
       <div class="show-card">
         <div class="show-preview">
-          <div class="mock p-anim">
-            <div class="mb"></div><div class="mh"></div>
-            <div class="ml-wrap"><div class="ml"></div><div class="ml s"></div></div>
+          <div class="sc-chrome"><div class="sc-dots"><span class="sc-dot rd"></span><span class="sc-dot yw"></span><span class="sc-dot gr"></span></div><div class="sc-url">mybrand.dev</div></div>
+          <div class="show-content p-anim">
+            <div class="mini-page">
+              <div class="m-nav-bar"><div class="m-nav-logo"></div><div class="m-nav-links"><div class="m-nav-link"></div><div class="m-nav-link"></div><div class="m-nav-link"></div></div></div>
+              <div class="m-hero-block">
+                <div class="m-h-tag"></div>
+                <div class="m-h1 full"></div><div class="m-h1 wide"></div><div class="m-h1 med"></div>
+                <div class="m-sub-line full" style="margin-top:8px"></div><div class="m-sub-line med"></div>
+                <div class="m-cta-row"><div class="m-cta solid"></div><div class="m-cta ghost"></div></div>
+              </div>
+              <div class="m-cards-row">
+                <div class="m-card-mini"><div class="m-card-icon"></div><div class="m-card-line full"></div><div class="m-card-line med"></div></div>
+                <div class="m-card-mini"><div class="m-card-icon"></div><div class="m-card-line full"></div><div class="m-card-line med"></div></div>
+                <div class="m-card-mini"><div class="m-card-icon"></div><div class="m-card-line full"></div><div class="m-card-line med"></div></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="show-info"><h3>Animated Landing</h3><p>GSAP cinematic entrances, scroll reveals, parallax. Like the site you're on.</p></div>
       </div>
+
+      <!-- Creative Portfolio -->
       <div class="show-card">
         <div class="show-preview">
-          <div class="mock p-port">
-            <div class="mg"><div class="mt"></div><div class="mt"></div><div class="mt"></div><div class="mt"></div></div>
+          <div class="sc-chrome"><div class="sc-dots"><span class="sc-dot rd"></span><span class="sc-dot yw"></span><span class="sc-dot gr"></span></div><div class="sc-url">myportfolio.dev</div></div>
+          <div class="show-content p-port">
+            <div class="mini-page">
+              <div class="m-nav-bar"><div class="m-nav-logo"></div><div class="m-nav-links"><div class="m-nav-link"></div><div class="m-nav-link"></div></div></div>
+              <div class="m-hero-block" style="padding-bottom:6px">
+                <div class="m-h-tag"></div>
+                <div class="m-h1 wide"></div><div class="m-h1 sm"></div>
+                <div class="m-cta-row"><div class="m-cta solid"></div></div>
+              </div>
+              <div class="m-grid-block">
+                <div class="m-grid-cell"></div>
+                <div class="m-grid-cell" style="margin-top:12px"></div>
+                <div class="m-grid-cell"></div>
+                <div class="m-grid-cell" style="margin-top:-12px"></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="show-info"><h3>Creative Portfolio</h3><p>Filterable galleries, lightboxes, masonry layouts. For artists and creators.</p></div>
       </div>
+
+      <!-- Business Site -->
       <div class="show-card">
         <div class="show-preview">
-          <div class="mock p-biz">
-            <div class="mn"></div><div class="mh2"></div>
-            <div class="mc-wrap"><div class="mc"></div><div class="mc"></div><div class="mc"></div></div>
+          <div class="sc-chrome"><div class="sc-dots"><span class="sc-dot rd"></span><span class="sc-dot yw"></span><span class="sc-dot gr"></span></div><div class="sc-url">mybusiness.dev</div></div>
+          <div class="show-content p-biz">
+            <div class="mini-page">
+              <div class="m-nav-bar"><div class="m-nav-logo"></div><div class="m-nav-links"><div class="m-nav-link"></div><div class="m-nav-link"></div><div class="m-nav-link"></div></div></div>
+              <div class="m-hero-block">
+                <div class="m-h-tag"></div>
+                <div class="m-h1 full"></div><div class="m-h1 med"></div>
+                <div class="m-sub-line full" style="margin-top:8px"></div><div class="m-sub-line med"></div>
+                <div class="m-cta-row"><div class="m-cta solid"></div><div class="m-cta ghost"></div></div>
+              </div>
+              <div class="m-cards-row">
+                <div class="m-card-mini"><div class="m-card-icon"></div><div class="m-card-line full"></div><div class="m-card-line med"></div></div>
+                <div class="m-card-mini"><div class="m-card-icon"></div><div class="m-card-line full"></div><div class="m-card-line med"></div></div>
+                <div class="m-card-mini"><div class="m-card-icon"></div><div class="m-card-line full"></div><div class="m-card-line med"></div></div>
+              </div>
+              <div class="m-testim">
+                <div class="m-testim-card"><div class="m-avatar"></div><div class="m-t-line full"></div><div class="m-t-line med"></div></div>
+                <div class="m-testim-card"><div class="m-avatar"></div><div class="m-t-line full"></div><div class="m-t-line med"></div></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="show-info"><h3>Business Site</h3><p>Services, testimonials, contact forms. Professional and conversion-ready.</p></div>
       </div>
+
+      <!-- SaaS Landing -->
       <div class="show-card">
         <div class="show-preview">
-          <div class="mock p-saas">
-            <div class="mp"></div><div class="mbig"></div>
-            <div class="mpc-wrap"><div class="mpc"></div><div class="mpc"></div><div class="mpc"></div></div>
+          <div class="sc-chrome"><div class="sc-dots"><span class="sc-dot rd"></span><span class="sc-dot yw"></span><span class="sc-dot gr"></span></div><div class="sc-url">myapp.dev</div></div>
+          <div class="show-content p-saas">
+            <div class="mini-page">
+              <div class="m-nav-bar"><div class="m-nav-logo"></div><div class="m-nav-links"><div class="m-nav-link"></div><div class="m-nav-link"></div><div class="m-nav-link"></div></div></div>
+              <div class="m-hero-block" style="text-align:center;padding-left:20%;padding-right:20%">
+                <div class="m-h-tag" style="margin:0 auto 7px"></div>
+                <div class="m-h1 full"></div><div class="m-h1 full"></div>
+                <div class="m-sub-line full" style="margin-top:8px"></div>
+                <div class="m-cta-row" style="justify-content:center"><div class="m-cta solid"></div></div>
+              </div>
+              <div class="m-price-row">
+                <div class="m-price-card"><div class="m-price-line lg"></div><div class="m-price-line full"></div><div class="m-price-line med"></div><div class="m-price-btn"></div></div>
+                <div class="m-price-card feat"><div class="m-price-line lg"></div><div class="m-price-line full"></div><div class="m-price-line med"></div><div class="m-price-btn"></div></div>
+                <div class="m-price-card"><div class="m-price-line lg"></div><div class="m-price-line full"></div><div class="m-price-line med"></div><div class="m-price-btn"></div></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="show-info"><h3>SaaS Landing Page</h3><p>Feature sections, pricing tables, waitlist forms. Built to convert.</p></div>
       </div>
+
     </div>
   </div>
 </div>
@@ -799,25 +1013,117 @@
 </footer>
 
 <script>
-  gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin);
+  gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin, Flip);
 
-  /* set initial states via GSAP (not CSS) so JS errors can't permanently hide content */
-  gsap.set('.hw', { opacity: 0, y: 60, rotateX: -60, transformPerspective: 600, transformOrigin: 'center bottom' });
-  gsap.set(['.hero-badge', '.hero-sub', '.hero-actions', '.hero-proof', '.scroll-cue'], { opacity: 0, y: 20 });
+  /* ── INTRO SEQUENCE ─────────────────────────────────────────────── */
+  function runIntro() {
+    const introTl = gsap.timeline();
 
-  /* HERO TIMELINE */
-  const tl = gsap.timeline({ delay: 0.2 });
+    // 1. "capi" fades up
+    introTl.from('#i-capi', { opacity: 0, y: 28, duration: 0.65, ease: 'power3.out' }, 0.25)
 
-  tl.to('.hero-badge', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' })
-    .to('.hw', {
-      opacity: 1, y: 0, rotateX: 0,
-      stagger: { amount: 0.55, from: 'start' },
-      duration: 0.7, ease: 'power4.out'
-    }, '-=0.3')
-    .to('.hero-sub',     { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, '-=0.2')
-    .to('.hero-actions', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4')
-    .to('.hero-proof',   { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.35')
-    .to('.scroll-cue',   { opacity: 1, y: 0, duration: 0.4 }, '-=0.1');
+    // 2. 'a' and 'i' glow indigo → "cApI"
+    .to(['#ic-a', '#ic-i'], {
+      color: 'var(--accent)',
+      textShadow: '0 0 28px rgba(99,102,241,0.85), 0 0 56px rgba(99,102,241,0.35)',
+      scale: 1.1,
+      duration: 0.5,
+      ease: 'power2.out'
+    }, 1.1)
+
+    // 3. White glowing clones of A and I detach and drift right
+    .call(() => {
+      ['#ic-a', '#ic-i'].forEach((sel, idx) => {
+        const el = document.querySelector(sel);
+        const rect = el.getBoundingClientRect();
+        const fs = parseFloat(getComputedStyle(el).fontSize);
+        const clone = document.createElement('span');
+        clone.textContent = idx === 0 ? 'A' : 'I';
+        clone.style.cssText = `
+          position:fixed;left:${rect.left}px;top:${rect.top}px;
+          width:${rect.width}px;height:${rect.height}px;
+          font-family:'Space Grotesk',sans-serif;font-weight:700;
+          font-size:${fs}px;line-height:1;letter-spacing:-0.04em;
+          color:#fff;text-shadow:0 0 36px rgba(255,255,255,0.95),0 0 72px rgba(255,255,255,0.5);
+          pointer-events:none;z-index:600;
+          display:flex;align-items:center;justify-content:center;
+        `;
+        document.body.appendChild(clone);
+        gsap.to(clone, {
+          x: fs * (3.2 + idx * 1.2),
+          opacity: 0,
+          duration: 0.7,
+          ease: 'power3.inOut',
+          onComplete: () => clone.remove()
+        });
+      });
+    }, [], '+=0.15')
+
+    // 4. Crossfade "capi" → "Captain AI"
+    .to('#i-capi',    { opacity: 0, duration: 0.4, ease: 'power2.in' }, '+=0.35')
+    .fromTo('#i-captain',
+      { opacity: 0, x: -18 },
+      { opacity: 1, x: 0, duration: 0.55, ease: 'power3.out' },
+    '-=0.2')
+
+    // 5. Brief pause, then use Flip to fly "Captain AI" to nav position
+    .call(() => {
+      const captain = document.getElementById('i-captain');
+      const navLogo = document.querySelector('.logo');
+
+      // Make real nav logo visible so Flip can measure it (but keep opacity 0)
+      gsap.set(navLogo, { visibility: 'visible', opacity: 0 });
+
+      // Measure both elements
+      const cRect = captain.getBoundingClientRect();
+      const nRect = navLogo.getBoundingClientRect();
+      const scale = nRect.height / cRect.height;
+      const targetX = (nRect.left + nRect.width / 2) - (cRect.left + cRect.width / 2);
+      const targetY = (nRect.top  + nRect.height / 2) - (cRect.top  + cRect.height / 2);
+
+      // Animate captain to nav position
+      gsap.to(captain, {
+        x: targetX, y: targetY,
+        scale: scale,
+        transformOrigin: 'center center',
+        duration: 0.75,
+        ease: 'power4.inOut',
+        onComplete: () => {
+          // Swap: show real logo, fade out intro
+          gsap.set(navLogo, { opacity: 1 });
+          gsap.to('#intro', {
+            opacity: 0, duration: 0.3,
+            onComplete: () => {
+              document.getElementById('intro').remove();
+              startHero();
+            }
+          });
+        }
+      });
+    }, [], '+=0.45');
+  }
+
+  /* ── HERO (fires after intro completes) ──────────────────────────── */
+  function startHero() {
+    /* set initial states */
+    gsap.set('.hw', { opacity: 0, y: 60, rotateX: -60, transformPerspective: 600, transformOrigin: 'center bottom' });
+    gsap.set(['.hero-badge', '.hero-sub', '.hero-actions', '.hero-proof', '.scroll-cue'], { opacity: 0, y: 20 });
+
+    const tl = gsap.timeline();
+
+    tl.to('.hero-badge', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' })
+      .to('.hw', {
+        opacity: 1, y: 0, rotateX: 0,
+        stagger: { amount: 0.55, from: 'start' },
+        duration: 0.7, ease: 'power4.out'
+      }, '-=0.3')
+      .to('.hero-sub',     { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, '-=0.2')
+      .to('.hero-actions', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4')
+      .to('.hero-proof',   { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.35')
+      .to('.scroll-cue',   { opacity: 1, y: 0, duration: 0.4 }, '-=0.1');
+  }
+
+  runIntro();
 
   /* orb parallax */
   const scrub = (el, y, x) => gsap.to(el, { y, x: x||0, ease:'none',

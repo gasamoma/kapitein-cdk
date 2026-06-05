@@ -7,6 +7,21 @@ Use GSAP for all animations. Make the page feel modern, smooth, and polished.
 
 Build a single-page landing site in `src/frontend/`. No frameworks, no build step — just HTML, CSS, and JavaScript loaded from CDN. When finished, remind the user to push to the `main` branch to deploy.
 
+---
+
+## BEFORE WRITING ANY CODE — READ THE PAGE FIRST
+
+If `src/frontend/index.html` already exists, **read it completely before making any changes.** Extract and reuse:
+- Which GSAP plugins are already in `<script>` tags — do NOT add duplicates
+- Which plugins are already in `gsap.registerPlugin(...)` — extend that call, don't replace it
+- The existing CSS custom properties (`--accent`, `--surface`, etc.) — use them, don't invent new ones
+- The existing class naming conventions — extend them consistently
+- Any utility functions or animation patterns already defined in `<script>` — reuse them
+
+**Never reinvent something that's already available on the page.** If SplitText is already loaded, use it. If a `startHero()` function exists, call it. If `--accent` is the brand color, use it.
+
+This applies to edits AND new features. Always audit the existing page before writing a single line.
+
 Ask the user:
 1. What is this landing page for? (product, service, event, personal brand?)
 2. What is the single most important action visitors should take? (sign up, book, buy, contact?)
