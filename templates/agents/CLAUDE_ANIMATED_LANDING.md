@@ -99,13 +99,16 @@ Include only the plugins you actually need for the page. Register all of them to
 
 **Important:** Always `registerPlugin()` before calling `new SplitText()`, `ScrollTrigger.create()`, etc. — even though GSAP auto-registers when loaded via `<script>`, explicit registration prevents tree-shaking issues and makes the code intention clear.
 
+**Before using any plugin for the first time on this page**, read its deep-dive guide at `templates/agents/gsap/<PluginName>.md` (e.g. `templates/agents/gsap/Flip.md`, `templates/agents/gsap/ScrollTrigger.md`). The dictionary above tells you *when* to reach for a plugin — those guides tell you the gotchas and idioms that separate "technically works" from "looks professional," so you get it right the first time instead of debugging it live.
+
 ---
 
 ## Animation patterns
 
 **Hero entrance — SplitText word reveal with stagger:**
 ```js
-const heroTitle = new SplitText('.hero-title', { type: 'words' });
+// SplitText.create() is the current API (replaced `new SplitText()` in v3.13 — see templates/agents/gsap/SplitText.md)
+const heroTitle = SplitText.create('.hero-title', { type: 'words' });
 gsap.set(heroTitle.words, { opacity: 0, y: 60, rotateX: -60, transformPerspective: 600, transformOrigin: 'center bottom' });
 // Then on DOMContentLoaded or immediately (script is at bottom of body):
 gsap.to(heroTitle.words, {
@@ -120,10 +123,14 @@ gsap.to('.hero-cta',      { opacity: 1, y: 0, duration: 0.6, delay: 0.7 });
 **Section title line reveal (SplitText lines):**
 ```js
 document.querySelectorAll('.section-title').forEach(el => {
-  const lines = new SplitText(el, { type: 'lines' });
-  gsap.from(lines.lines, {
-    opacity: 0, y: 50, stagger: 0.1, duration: 0.8, ease: 'power3.out',
-    scrollTrigger: { trigger: el, start: 'top 88%' }
+  SplitText.create(el, {
+    type: 'lines',
+    onSplit(self) {
+      return gsap.from(self.lines, {
+        opacity: 0, y: 50, stagger: 0.1, duration: 0.8, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 88%' }
+      });
+    }
   });
 });
 ```
@@ -163,6 +170,18 @@ ScrollTrigger.create({
 });
 ```
 
+**Morphing an element from one layout/state into another (Flip):**
+The clean way to fly something from a splash screen into its place in the nav, or grow a card into an expanded view — snapshot the "before" layout, mutate the DOM into the "after" state, then let Flip animate the difference for you. No manual `getBoundingClientRect()` math, no clones to fade in and out.
+```js
+const state = Flip.getState(el);          // 1. snapshot current position/size/etc.
+el.classList.add('final-position');       // 2. make the DOM change INSTANTLY
+otherEl.remove();                         //    (move in DOM, swap classes — whatever the "after" state needs)
+Flip.from(state, {                        // 3. Flip plays the difference as an animation
+  duration: 0.7, ease: 'power3.inOut',
+  onComplete: () => { /* chain the next step here */ }
+});
+```
+
 ---
 
 ## API (only if the page has a form)
@@ -179,8 +198,53 @@ POST to `window.API_BASE_URL` with `{ name, email, message, source }`.
 ### CORS
 Lambda Function URL CORS is configured in the CDK stack. Do not add CORS headers manually in the handler.
 
-### Deploying
-User pushes to `main`. GitHub Actions deploys automatically. No local tools needed.
+### Deploying and verifying — every time, before you say "done"
+
+1. **Push to `main`.** GitHub Actions builds and deploys automatically — no local tools needed.
+
+2. **Wait for the deploy WITHOUT polling.** A deploy takes roughly 4 minutes once the pipeline is warm, and up to ~10 minutes on a first run (Docker bundling, CDK bootstrap, CloudFront distribution creation). Do not repeatedly call `gh run list` or refresh the Actions tab — that burns calls and looks like you're stuck. Instead, run ONE blocking command that waits for GitHub to finish and reports the result:
+   ```bash
+   gh run watch $(gh run list --branch main --limit 1 --json databaseId --jq '.[0].databaseId') --exit-status
+   ```
+   Tell the user up front roughly how long this will take so they're not left wondering, then let the command block until it returns — don't check in early.
+
+3. **Test the LIVE CloudFront URL — never test a local copy.** This page calls a live API (`/config.json`, the lead-capture endpoint); a `file://` origin can't reach either, so a "local" test would pass or fail for the wrong reasons. Get the CloudFront URL from the stack outputs / `cdk deploy` output / CloudFormation console, then drive Playwright at that URL.
+
+### What to verify — review it like a picky designer, not a smoke-tester
+
+Don't just confirm the page loads. Walk through this checklist on the live URL:
+
+**Console & network**
+- Zero console errors or warnings (`browser_console_messages`)
+- `/config.json` loads and `window.API_BASE_URL` gets set
+- No 404s for scripts, fonts, or images (`browser_network_requests`)
+
+**Visual QA — the picky pass**
+- No overlapping text or elements
+- No text or images clipped/cut off by their containers
+- Things that should be centered actually look centered (icons/padding can throw off optical balance)
+- Consistent spacing and rhythm between sections — nothing cramped or oddly loose
+- Real contrast between text and background — on a dark theme, watch for "dark grey on black" text
+- Type realistic content into any form fields (a real name, a longer email, a multi-sentence message) and confirm nothing breaks the layout — don't only check the empty state
+
+**Responsiveness**
+- Re-run the visual QA pass at 375px (mobile), ~768px (tablet), and ~1440px (desktop) — layout bugs hide at breakpoints, not in the middle of them
+- Confirm the nav/menu works at mobile width
+
+**Forms (if the page has one)**
+- Fill every field with realistic values and submit
+- Confirm the user sees an actual success state — not just a 200 in the network log
+- Submit with a required field missing and confirm a sensible error shows
+- Inspect the request body and response in `browser_network_requests`
+
+**Animations — what screenshots can and can't tell you**
+A still frame can't judge whether motion *feels* right — timing, easing, and stagger read completely differently in motion than frozen. Don't try to fully grade animation quality from screenshots. Instead:
+- Confirm each animation actually fires (a couple of screenshots a beat apart should show visible change)
+- Hunt specifically for elements stuck invisible — a `gsap.set(el, {opacity: 0})` whose matching `.to()` never ran is the most common real bug, and the easiest to miss in a single screenshot
+- Beyond that, get the configuration right up front and trust GSAP to handle the rest — see the per-plugin guides in `templates/agents/gsap/` for the gotchas that prevent these bugs before you ever open a browser
+
+### Where test artifacts go
+Save every screenshot, trace, or log to `.playwright-mcp/` — it's gitignored, so nothing pollutes the repo or `git status`. Use descriptive names: `.playwright-mcp/hero-mobile-375.png`, `.playwright-mcp/form-success-state.png`, not `screenshot1.png`. Never write artifacts to the repo root.
 
 ---
 
@@ -188,7 +252,7 @@ User pushes to `main`. GitHub Actions deploys automatically. No local tools need
 
 - **Performance**: animate only `transform` and `opacity` — never `width`, `height`, `top`, `left`
 - **Respect motion**: wrap all animations in `if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)`
-- **Initial states via GSAP**: use `gsap.set()` to hide elements before animating them — never `opacity: 0` in CSS, because if JS fails the content stays visible
+- **Initial states via GSAP, ALL of them, up front**: use `gsap.set()` to hide elements before animating them — never `opacity: 0` in CSS, because if JS fails the content stays visible. Set every element that *any* animation on the page will eventually reveal in ONE block at the very top of your script, before any sequencing runs — not inside the function that plays its entrance. (Real bug from this project: hero elements were hidden only inside the function that animated them in, which ran *after* a multi-second intro sequence — so they sat fully visible behind the intro the whole time it played.)
 - **One strong CTA**: every section flows toward the single action the user identified
 - **Mobile-first CSS**: design for 375px, then `min-width` media queries up
 - **Smooth scroll**: `html { scroll-behavior: smooth; }` + anchor links for all sections

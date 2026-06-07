@@ -15,3 +15,9 @@ node_modules/
 .DS_Store
 *.swp
 *.swo
+
+# Playwright MCP test artifacts (screenshots, traces, console/page snapshots)
+.playwright-mcp/
+
+# Claude Code local session state
+.claude/
