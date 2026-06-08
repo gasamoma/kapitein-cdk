@@ -202,13 +202,13 @@ Lambda Function URL CORS is configured in the CDK stack. Do not add CORS headers
 
 1. **Push to `main`.** GitHub Actions builds and deploys automatically — no local tools needed.
 
-2. **Wait for the deploy WITHOUT polling.** A deploy takes roughly 4 minutes once the pipeline is warm, and up to ~10 minutes on a first run (Docker bundling, CDK bootstrap, CloudFront distribution creation). Do not repeatedly call `gh run list` or refresh the Actions tab — that burns calls and looks like you're stuck. Instead, run ONE blocking command that waits for GitHub to finish and reports the result:
-   ```bash
-   gh run watch $(gh run list --branch main --limit 1 --json databaseId --jq '.[0].databaseId') --exit-status
-   ```
-   Tell the user up front roughly how long this will take so they're not left wondering, then let the command block until it returns — don't check in early.
+2. **Don't poll for deploy status — and don't assume `gh` (GitHub CLI) is installed.** This project's whole premise is "no local tools required," so never rely on `gh run watch`, `gh run list`, or any other CLI the user would have to install themselves. Repeatedly checking the Actions tab yourself is just as bad — it burns calls and makes you look stuck. Instead:
+   - Tell the user ONCE, up front: a deploy takes roughly 4 minutes once the pipeline is warm, and up to ~10 minutes on a first run (Docker bundling, CDK bootstrap, CloudFront distribution creation).
+   - Then simply **let the conversation continue naturally** — wrap up other things, answer questions, or ask the user to give you the word when they think it's ready. The back-and-forth itself provides the wait; you don't need to manufacture one.
+   - When you do check, **check the live CloudFront URL for the actual change** (see step 3) rather than checking whether a pipeline *says* it succeeded — that's the outcome that actually matters to the user, and it sidesteps GitHub Actions entirely.
+   - If the change isn't visible yet, say so plainly ("still deploying — give it a few more minutes and I'll look again") and wait for the next natural pause before re-checking. Never loop silently.
 
-3. **Test the LIVE CloudFront URL — never test a local copy.** This page calls a live API (`/config.json`, the lead-capture endpoint); a `file://` origin can't reach either, so a "local" test would pass or fail for the wrong reasons. Get the CloudFront URL from the stack outputs / `cdk deploy` output / CloudFormation console, then drive Playwright at that URL.
+3. **Test the LIVE CloudFront URL — never test a local copy.** This page calls a live API (`/config.json`, the lead-capture endpoint); a `file://` origin can't reach either, so a "local" test would pass or fail for the wrong reasons. Get the CloudFront URL from the stack outputs / `cdk deploy` output / CloudFormation console, then drive Playwright at that URL. (CloudFront caches aggressively — if you push a change and the live page still looks like the old version, that's likely cache, not a failed deploy. Try a hard reload or a cache-busting query string like `?v=2` before concluding something's wrong.)
 
 ### What to verify — review it like a picky designer, not a smoke-tester
 
